@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Facture {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+
+<!-- ── En-tête ── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
+      {{ invoice.invoice_number }}
+    </h1>
+    <p class="page-subtitle">
+      Créée le {{ invoice.created_at | fmt_date }}
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('invoices') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Retour
+    </a>
+    <a href="{{ url_for('edit_invoice', iid=invoice.id) }}" class="btn btn-warning text-dark">
+      <i class="bi bi-pencil-fill me-1"></i>Modifier
+    </a>
+    <a href="{{ url_for('print_invoice', iid=invoice.id) }}" target="_blank"
+       class="btn btn-primary">
+      <i class="bi bi-printer-fill me-1"></i>Imprimer / PDF
+    </a>
+    <button type="button" class="btn btn-outline-danger"
+            data-bs-toggle="modal" data-bs-target="#delModal">
+      <i class="bi bi-trash3-fill me-1"></i>Supprimer
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- ── Client & Infos ── -->
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="bi bi-person-fill me-2"></i>Client
+      </div>
+      <div class="card-body p-4">
+        {% if invoice.client_name or invoice.client_phone or invoice.client_email or invoice.client_address %}
+          {% if invoice.client_name %}
+            <div class="fw-bold fs-5 mb-2">{{ invoice.client_name }}</div>
+          {% endif %}
+          {% if invoice.client_phone %}
+            <div class="text-muted small mb-1">
+              <i class="bi bi-telephone-fill me-2 text-primary"></i>{{ invoice.client_phone }}
+            </div>
+          {% endif %}
+          {% if invoice.client_email %}
+            <div class="text-muted small mb-1">
+              <i class="bi bi-envelope-fill me-2 text-primary"></i>{{ invoice.client_email }}
+            </div>
+          {% endif %}
+          {% if invoice.client_address %}
+            <div class="text-muted small mt-2">
+              <i class="bi bi-geo-alt-fill me-2 text-primary"></i>{{ invoice.client_address }}
+            </div>
+          {% endif %}
+        {% else %}
+          <span class="text-muted fst-italic">Aucune information client</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if invoice.notes %}
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-sticky-fill me-2"></i>Notes
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted mb-0" style="white-space: pre-line;">{{ invoice.notes }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Articles ── -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cart3 me-2"></i>Articles</span>
+        <span class="badge bg-secondary">{{ items|length }} article{{ 's' if items|length > 1 else '' }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Désignation</th>
+              <th class="text-center">Qté</th>
+              <th class="text-end">Prix U.</th>
+              <th class="text-end">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td class="text-muted">{{ loop.index }}</td>
+              <td>
+                <div class="fw-semibold">{{ item.product_name }}</div>
+                {% if item.description %}
+                  <div class="text-muted small">{{ item.description }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="text-end text-muted">{{ item.unit_price | fmt_price }} {{ currency }}</td>
+              <td class="text-end fw-bold text-primary">{{ item.subtotal | fmt_price }} {{ currency }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="table-dark">
+              <td colspan="4" class="text-end fw-bold">TOTAL</td>
+              <td class="text-end fw-bold fs-5">{{ invoice.total | fmt_price }} {{ currency }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal suppression ── -->
+<div class="modal fade" id="delModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-danger">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>Supprimer la facture
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Voulez-vous vraiment supprimer la facture <strong>{{ invoice.invoice_number }}</strong> ?
+        <br><small class="text-muted">Cette action supprimera aussi tous les articles associés et est irréversible.</small>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <form action="{{ url_for('delete_invoice', iid=invoice.id) }}" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3-fill me-1"></i>Supprimer définitivement
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

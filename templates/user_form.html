@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} un utilisateur{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      <i class="bi bi-person-{{ 'plus' if action == 'Ajouter' else 'gear' }}-fill me-2 text-primary"></i>
+      {{ action }} un utilisateur
+    </h1>
+  </div>
+  <a href="{{ url_for('users_list') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Retour
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6 col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-person-fill me-2"></i>Informations du compte
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+
+          <!-- Identifiant -->
+          <div class="mb-3">
+            <label class="form-label" for="username">
+              Identifiant (login) <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="username" name="username"
+                   value="{{ user.username if user else '' }}"
+                   {% if user %}readonly class="form-control bg-light"{% endif %}
+                   placeholder="ex: jean.dupont"
+                   required {% if not user %}autofocus{% endif %}>
+            {% if user %}
+              <div class="form-text text-muted">L'identifiant ne peut pas être modifié.</div>
+            {% endif %}
+          </div>
+
+          <!-- Nom complet -->
+          <div class="mb-3">
+            <label class="form-label" for="full_name">Nom complet</label>
+            <input type="text" class="form-control" id="full_name" name="full_name"
+                   value="{{ user.full_name if user else '' }}"
+                   placeholder="Jean Dupont">
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="mb-3">
+            <label class="form-label" for="password">
+              Mot de passe
+              {% if not user %}<span class="text-danger">*</span>{% endif %}
+            </label>
+            <input type="password" class="form-control" id="password" name="password"
+                   placeholder="{% if user %}Laisser vide pour conserver l'actuel{% else %}Minimum 4 caractères{% endif %}"
+                   {% if not user %}required{% endif %} minlength="4">
+            {% if user %}
+              <div class="form-text text-muted">Laissez vide pour ne pas changer le mot de passe.</div>
+            {% endif %}
+          </div>
+
+          <!-- Rôle -->
+          <div class="mb-3">
+            <label class="form-label" for="role">Rôle</label>
+            <select class="form-select" id="role" name="role">
+              <option value="user"  {% if not user or user.role == 'user'  %}selected{% endif %}>
+                Utilisateur — accès standard
+              </option>
+              <option value="admin" {% if user and user.role == 'admin' %}selected{% endif %}>
+                Administrateur — accès total
+              </option>
+            </select>
+          </div>
+
+          <!-- Statut (mode édition seulement) -->
+          {% if user %}
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="active" name="active"
+                     {% if user.active %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="active">Compte actif</label>
+            </div>
+            <div class="form-text text-muted">Désactivez pour bloquer l'accès sans supprimer le compte.</div>
+          </div>
+          {% endif %}
+
+          <!-- Boutons -->
+          <div class="d-flex gap-2 justify-content-end pt-2 border-top">
+            <a href="{{ url_for('users_list') }}" class="btn btn-outline-secondary">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{{ action }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

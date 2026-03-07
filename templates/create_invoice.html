@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle Facture{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-plus-square-fill me-2 text-primary"></i>Nouvelle Facture</h1>
+    <p class="page-subtitle">Remplissez les informations client et ajoutez les articles.</p>
+  </div>
+  <a href="{{ url_for('invoices') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Retour
+  </a>
+</div>
+
+<form method="POST" onsubmit="return validateForm()">
+  <div class="row g-4">
+
+    <!-- ═══ Colonne gauche ═══ -->
+    <div class="col-lg-4">
+
+      <!-- Informations client -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="bi bi-person-fill me-2"></i>Informations client
+          <span class="text-muted fw-normal small ms-1">(optionnel)</span>
+        </div>
+        <div class="card-body p-4">
+          <div class="mb-3">
+            <label class="form-label" for="client_name">Nom / Raison sociale</label>
+            <input type="text" class="form-control" id="client_name" name="client_name"
+                   placeholder="Ex : Ahmed Benali, SARL XYZ...">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="client_phone">Téléphone</label>
+            <input type="tel" class="form-control" id="client_phone" name="client_phone"
+                   placeholder="+212 6XX-XXXXXX">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="client_email">Email</label>
+            <input type="email" class="form-control" id="client_email" name="client_email"
+                   placeholder="client@email.com">
+          </div>
+          <div class="mb-0">
+            <label class="form-label" for="client_address">Adresse</label>
+            <textarea class="form-control" id="client_address" name="client_address"
+                      rows="3" placeholder="Adresse complète..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card">
+        <div class="card-header">
+          <i class="bi bi-sticky-fill me-2"></i>Notes / Remarques
+        </div>
+        <div class="card-body p-4">
+          <textarea class="form-control" name="notes" rows="4"
+                    placeholder="Conditions de paiement, délai de livraison, observations..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Colonne droite ═══ -->
+    <div class="col-lg-8">
+
+      <!-- Articles -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-cart3 me-2"></i>Articles de la facture</span>
+          <button type="button" class="btn btn-sm btn-primary" onclick="addItemRow()">
+            <i class="bi bi-plus-lg me-1"></i>Ajouter un article
+          </button>
+        </div>
+        <div class="card-body p-4">
+
+          <!-- Message quand vide -->
+          <div id="no-items-msg" class="text-center py-4 text-muted" style="display:none;">
+            <i class="bi bi-cart-x fs-1 opacity-25 d-block mb-2"></i>
+            Aucun article. Cliquez sur « Ajouter un article ».
+          </div>
+
+          <!-- Lignes d'articles (générées par JS) -->
+          <div id="items-container"></div>
+
+          <!-- Total -->
+          <div class="total-box mt-3">
+            <div class="total-label">Total de la facture</div>
+            <div class="total-amount" id="grand-total">0,00 {{ currency }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton enregistrer -->
+      <div class="d-flex gap-3 justify-content-end">
+        <a href="{{ url_for('invoices') }}" class="btn btn-outline-secondary btn-lg px-4">
+          <i class="bi bi-x-lg me-1"></i>Annuler
+        </a>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+          <i class="bi bi-check-circle-fill me-2"></i>Enregistrer la facture
+        </button>
+      </div>
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const CURRENCY = '{{ currency }}';
+  const EXISTING_ITEMS = [];
+</script>
+<script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,98 @@
+name: 🏗️ Build BoutikManager
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # Bouton "Run workflow" sur GitHub
+
+jobs:
+
+  # ══════════════════════════════════════════
+  #  BUILD MAC
+  # ══════════════════════════════════════════
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: 📥 Télécharger le code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Installer Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Installer les dépendances
+        run: pip install flask pyinstaller
+
+      - name: ⚙️ Compiler pour Mac
+        run: pyinstaller boutikmanager.spec --clean --noconfirm
+
+      - name: 📤 Sauvegarder l'exécutable Mac
+        uses: actions/upload-artifact@v4
+        with:
+          name: BoutikManager-Mac
+          path: dist/BoutikManager
+          retention-days: 30
+
+  # ══════════════════════════════════════════
+  #  BUILD WINDOWS
+  # ══════════════════════════════════════════
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: 📥 Télécharger le code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Installer Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Installer les dépendances
+        run: pip install flask pyinstaller
+
+      - name: ⚙️ Compiler pour Windows
+        run: pyinstaller boutikmanager.spec --clean --noconfirm
+
+      - name: 📤 Sauvegarder l'exécutable Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: BoutikManager-Windows
+          path: dist/BoutikManager.exe
+          retention-days: 30
+
+  # ══════════════════════════════════════════
+  #  CRÉER UNE RELEASE AUTOMATIQUE
+  # ══════════════════════════════════════════
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Télécharger les artifacts
+        uses: actions/download-artifact@v4
+
+      - name: 🏷️ Créer la Release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "BoutikManager v${{ github.run_number }}"
+          body: |
+            ## 📦 Télécharger BoutikManager
+
+            | Système | Fichier |
+            |---------|---------|
+            | 🍎 Mac  | `BoutikManager-Mac` |
+            | 🪟 Windows | `BoutikManager-Windows.exe` |
+
+            ### Installation
+            - **Mac** : Double-clic → si bloqué : Clic droit → Ouvrir
+            - **Windows** : Double-clic sur `.exe`
+
+            Login par défaut : `admin` / `admin123`
+          files: |
+            BoutikManager-Mac/BoutikManager
+            BoutikManager-Windows/BoutikManager.exe
+          draft: false
+          prerelease: false

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Mon Compte{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-person-circle me-2 text-primary"></i>Mon Compte</h1>
+    <p class="page-subtitle">Gérez vos informations personnelles</p>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6 col-md-8">
+
+    <!-- Infos -->
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-person-fill me-2"></i>Informations</div>
+      <div class="card-body p-4">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted fw-normal">Identifiant</dt>
+          <dd class="col-sm-8 fw-semibold">{{ current_user.username }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">Nom complet</dt>
+          <dd class="col-sm-8">{{ current_user.full_name or '—' }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">Rôle</dt>
+          <dd class="col-sm-8">
+            {% if current_user.role == 'admin' %}
+              <span class="badge bg-danger">Administrateur</span>
+            {% else %}
+              <span class="badge bg-secondary">Utilisateur</span>
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Changer mot de passe -->
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lock-fill me-2"></i>Changer le mot de passe</div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label" for="current_password">
+              Mot de passe actuel <span class="text-danger">*</span>
+            </label>
+            <input type="password" class="form-control" id="current_password"
+                   name="current_password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="new_password">
+              Nouveau mot de passe <span class="text-danger">*</span>
+            </label>
+            <input type="password" class="form-control" id="new_password"
+                   name="new_password" minlength="4" required placeholder="Minimum 4 caractères">
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="confirm_password">
+              Confirmer le nouveau <span class="text-danger">*</span>
+            </label>
+            <input type="password" class="form-control" id="confirm_password"
+                   name="confirm_password" required>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle-fill me-1"></i>Modifier le mot de passe
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Utilisateurs{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-people-fill me-2 text-primary"></i>Utilisateurs</h1>
+    <p class="page-subtitle">Gérez les comptes d'accès à BoutikManager</p>
+  </div>
+  <a href="{{ url_for('add_user') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus-fill me-1"></i>Ajouter un utilisateur
+  </a>
+</div>
+
+<!-- ── Table ── -->
+<div class="card table-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-ul me-2"></i>Comptes enregistrés</span>
+    <span class="badge bg-secondary">{{ users|length }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Identifiant</th>
+          <th>Nom complet</th>
+          <th class="text-center">Rôle</th>
+          <th class="text-center">Statut</th>
+          <th>Créé le</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <i class="bi bi-person-circle me-2 text-muted"></i>
+            <strong>{{ u.username }}</strong>
+            {% if u.id == current_user.id %}
+              <span class="badge bg-info ms-1 small">vous</span>
+            {% endif %}
+          </td>
+          <td>{{ u.full_name or '—' }}</td>
+          <td class="text-center">
+            {% if u.role == 'admin' %}
+              <span class="badge bg-danger">Admin</span>
+            {% else %}
+              <span class="badge bg-secondary">Utilisateur</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if u.active %}
+              <span class="badge bg-success">Actif</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Désactivé</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ u.created_at | fmt_date_short }}</td>
+          <td class="text-center">
+            <a href="{{ url_for('edit_user', uid=u.id) }}"
+               class="btn btn-sm btn-outline-primary me-1" title="Modifier">
+              <i class="bi bi-pencil-fill"></i>
+            </a>
+            {% if u.id != current_user.id %}
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    title="Supprimer"
+                    data-bs-toggle="modal" data-bs-target="#delUser{{ u.id }}">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
+            {% endif %}
+          </td>
+        </tr>
+
+        <!-- Modal suppression -->
+        <div class="modal fade" id="delUser{{ u.id }}" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <h5 class="modal-title">Supprimer l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                Voulez-vous vraiment supprimer <strong>{{ u.username }}</strong> ?
+                <br><small class="text-muted">Cette action est irréversible.</small>
+              </div>
+              <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+                <form action="{{ url_for('delete_user', uid=u.id) }}" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Explication des rôles ── -->
+<div class="card">
+  <div class="card-header"><i class="bi bi-info-circle me-2"></i>Rôles</div>
+  <div class="card-body p-4">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="d-flex gap-3">
+          <span class="badge bg-danger align-self-start mt-1">Admin</span>
+          <div>
+            <div class="fw-semibold">Administrateur</div>
+            <div class="text-muted small">Accès total : produits, factures, paramètres, gestion des utilisateurs.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex gap-3">
+          <span class="badge bg-secondary align-self-start mt-1">User</span>
+          <div>
+            <div class="fw-semibold">Utilisateur</div>
+            <div class="text-muted small">Peut créer et gérer produits et factures. Pas d'accès à la gestion des comptes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

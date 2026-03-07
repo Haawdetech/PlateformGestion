@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Factures{% endblock %}
+
+{% block content %}
+
+<!-- ── En-tête ── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-receipt-cutoff me-2 text-primary"></i>Factures</h1>
+    <p class="page-subtitle">Historique de toutes vos factures</p>
+  </div>
+  <a href="{{ url_for('create_invoice') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Nouvelle Facture
+  </a>
+</div>
+
+<!-- ── Stats ── -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card blue">
+      <span class="stat-icon">🧾</span>
+      <div>
+        <div class="stat-number">{{ invoices|length }}</div>
+        <div class="stat-label">Total factures</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card green">
+      <span class="stat-icon">💰</span>
+      <div>
+        <div class="stat-number">{{ total_revenue | fmt_price }}</div>
+        <div class="stat-label">Chiffre d'affaires ({{ currency }})</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tableau ── -->
+<div class="card table-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-ul me-2"></i>Liste des factures</span>
+    {% if invoices %}
+      <span class="badge bg-secondary">{{ invoices|length }} facture{{ 's' if invoices|length > 1 else '' }}</span>
+    {% endif %}
+  </div>
+
+  {% if invoices %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>N° Facture</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th>Articles</th>
+          <th class="text-end">Total</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td>
+            <a href="{{ url_for('invoice_detail', iid=inv.id) }}"
+               class="fw-bold text-primary text-decoration-none">
+              {{ inv.invoice_number }}
+            </a>
+          </td>
+          <td>
+            {% if inv.client_name %}
+              <i class="bi bi-person-fill me-1 text-muted"></i>{{ inv.client_name }}
+            {% else %}
+              <span class="text-muted fst-italic">Client anonyme</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ inv.created_at | fmt_date }}</td>
+          <td>
+            {# Article count badge #}
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-box-seam me-1"></i>
+              {{ inv.id }}
+            </span>
+          </td>
+          <td class="text-end fw-bold text-success fs-6">
+            {{ inv.total | fmt_price }} {{ currency }}
+          </td>
+          <td class="text-center">
+            <a href="{{ url_for('invoice_detail', iid=inv.id) }}"
+               class="btn btn-sm btn-outline-primary me-1" title="Voir">
+              <i class="bi bi-eye-fill"></i>
+            </a>
+            <a href="{{ url_for('edit_invoice', iid=inv.id) }}"
+               class="btn btn-sm btn-outline-warning me-1" title="Modifier">
+              <i class="bi bi-pencil-fill"></i>
+            </a>
+            <a href="{{ url_for('print_invoice', iid=inv.id) }}" target="_blank"
+               class="btn btn-sm btn-outline-secondary me-1" title="Imprimer / PDF">
+              <i class="bi bi-printer-fill"></i>
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    title="Supprimer"
+                    data-bs-toggle="modal" data-bs-target="#delInv{{ inv.id }}">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
+          </td>
+        </tr>
+
+        <!-- Modal suppression -->
+        <div class="modal fade" id="delInv{{ inv.id }}" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <h5 class="modal-title">Supprimer la facture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                Voulez-vous vraiment supprimer la facture
+                <strong>{{ inv.invoice_number }}</strong> ?
+                <br><small class="text-muted">Cette action est irréversible.</small>
+              </div>
+              <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+                <form action="{{ url_for('delete_invoice', iid=inv.id) }}" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash3-fill me-1"></i>Supprimer
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">🧾</span>
+    <h5 class="text-muted">Aucune facture créée</h5>
+    <p class="text-muted small mb-4">Créez votre première facture pour un client.</p>
+    <a href="{{ url_for('create_invoice') }}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>Créer une facture
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

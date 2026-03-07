@@ -1,0 +1,301 @@
+/* ═══════════════════════════════════════════════
+   BoutikManager — Feuille de style principale
+   ═══════════════════════════════════════════════ */
+
+:root {
+  --primary:      #3b5bdb;
+  --primary-dark: #2f4ac0;
+  --dark:         #1a1a2e;
+  --success:      #2f9e44;
+  --danger:       #e03131;
+  --warning:      #f59f00;
+  --gray-50:      #f8f9fa;
+  --gray-100:     #f1f3f5;
+  --gray-200:     #e9ecef;
+  --gray-500:     #adb5bd;
+  --gray-700:     #495057;
+  --radius:       10px;
+  --radius-sm:    6px;
+  --shadow:       0 2px 12px rgba(0,0,0,.07);
+  --shadow-md:    0 4px 24px rgba(0,0,0,.11);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--gray-100);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #212529;
+}
+
+main { flex: 1; }
+
+/* ── Navbar ── */
+.navbar {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%) !important;
+  padding: .75rem 0;
+  box-shadow: 0 2px 20px rgba(0,0,0,.25);
+}
+
+.navbar-brand {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  gap: .5rem;
+}
+
+.navbar-brand .brand-icon { font-size: 1.6rem; }
+
+.nav-link {
+  border-radius: 30px;
+  padding: .4rem .9rem !important;
+  transition: background .18s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(255,255,255,.12) !important;
+}
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  color: var(--gray-700);
+  font-size: .875rem;
+  margin: .25rem 0 0;
+}
+
+/* ── Stat cards ── */
+.stat-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-card.blue   { border-left-color: #3b5bdb; }
+.stat-card.green  { border-left-color: #2f9e44; }
+.stat-card.orange { border-left-color: #e8590c; }
+.stat-card.purple { border-left-color: #7048e8; }
+
+.stat-icon {
+  font-size: 2rem;
+  opacity: .75;
+  flex-shrink: 0;
+}
+
+.stat-number {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--dark);
+}
+
+.stat-label {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--gray-700);
+  margin-top: 3px;
+}
+
+/* ── Cards ── */
+.card {
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s ease;
+}
+
+.card-header {
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  font-weight: 600;
+  border-bottom: 1px solid var(--gray-200);
+  background: #fff;
+  padding: 1rem 1.25rem;
+}
+
+.card-header.bg-primary { background: var(--primary) !important; }
+.card-header.bg-dark    { background: var(--dark) !important; }
+
+/* ── Tables ── */
+.table-card .table { margin: 0; }
+
+.table thead th {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--gray-700);
+  font-weight: 700;
+  background: var(--gray-50);
+  border-top: none;
+  padding: .85rem .75rem;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  padding: .8rem .75rem;
+  border-color: var(--gray-200);
+}
+
+.table-hover tbody tr {
+  transition: background .15s ease;
+}
+
+.table-hover tbody tr:hover {
+  background: #edf2ff !important;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all .15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59,91,219,.35);
+}
+
+.btn-sm { border-radius: 5px; font-size: .8rem; }
+
+/* ── Forms ── */
+.form-control, .form-select {
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray-200);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59,91,219,.12);
+}
+
+.form-label {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: .35rem;
+}
+
+/* ── Invoice items ── */
+#items-container .item-row {
+  border: 1.5px solid var(--gray-200) !important;
+  border-radius: var(--radius) !important;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  animation: slideIn .25s ease;
+}
+
+#items-container .item-row:hover {
+  border-color: var(--primary) !important;
+  box-shadow: 0 2px 12px rgba(59,91,219,.1) !important;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Total display ── */
+.total-box {
+  background: linear-gradient(135deg, var(--primary) 0%, #2f4ac0 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  text-align: right;
+}
+
+.total-box .total-label {
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  opacity: .85;
+}
+
+.total-box .total-amount {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: var(--gray-500);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  opacity: .3;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* ── Footer ── */
+footer {
+  background: #fff;
+  border-top: 1px solid var(--gray-200);
+  padding: .9rem 0;
+  color: var(--gray-700);
+  font-size: .8rem;
+}
+
+/* ── Alerts ── */
+.alert {
+  border-radius: var(--radius-sm);
+  border: none;
+  box-shadow: var(--shadow);
+}
+
+/* ── Badge ── */
+.badge { border-radius: 5px; font-weight: 600; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; }
+  .stat-number { font-size: 1.5rem; }
+  .total-amount { font-size: 1.6rem; }
+}
+
+/* ── Print (pages normales) ── */
+@media print {
+  body      { background: #fff; }
+  .navbar, footer, .no-print, .btn { display: none !important; }
+  .card     { box-shadow: none !important; }
+}

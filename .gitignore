@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+dist/
+build/
+*.pyc
+boutique.db
+*.spec.bak
+.claude
+.env

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} un produit{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      <i class="bi bi-{% if action == 'Ajouter' %}plus-square-fill{% else %}pencil-square{% endif %} me-2 text-primary"></i>
+      {{ action }} un produit
+    </h1>
+    <p class="page-subtitle">
+      {% if action == 'Ajouter' %}Ajoutez un nouveau produit ou service au catalogue.
+      {% else %}Modifiez les informations du produit.{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Retour
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-box-seam me-2"></i>Informations du produit
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <!-- Nom -->
+          <div class="mb-4">
+            <label class="form-label" for="name">
+              Nom du produit <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="name" name="name"
+                   value="{{ product.name if product else '' }}"
+                   placeholder="Ex : Chemise coton, Service conseil..." required autofocus>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" name="description"
+                      rows="3" placeholder="Description optionnelle du produit...">{{ product.description if product and product.description else '' }}</textarea>
+          </div>
+
+          <!-- Prix & Stock -->
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <label class="form-label" for="price">
+                Prix par défaut <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="price" name="price"
+                       step="0.01" min="0"
+                       value="{{ product.price if product else '' }}"
+                       placeholder="0.00" required>
+                <span class="input-group-text fw-semibold">{{ currency }}</span>
+              </div>
+              <div class="form-text">Ce prix sera pré-rempli lors de la création de factures.</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="stock">Quantité en stock</label>
+              <input type="number" class="form-control" id="stock" name="stock"
+                     min="0"
+                     value="{{ product.stock if product and product.stock is not none else '' }}"
+                     placeholder="Laisser vide si non suivi">
+              <div class="form-text">Optionnel — pour suivi de stock.</div>
+            </div>
+          </div>
+
+          <!-- Boutons -->
+          <div class="d-flex gap-2 justify-content-end pt-2 border-top">
+            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Annuler
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-{% if action == 'Ajouter' %}plus-lg{% else %}check-lg{% endif %} me-1"></i>
+              {{ action }} le produit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
