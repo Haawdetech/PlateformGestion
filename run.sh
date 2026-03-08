@@ -26,8 +26,10 @@ fi
 source venv/bin/activate
 
 # Installer / mettre à jour les dépendances
+# On utilise venv/bin/pip pour éviter l'erreur "externally-managed" de macOS
 echo "📦  Vérification des dépendances..."
-pip install -r requirements.txt --quiet
+venv/bin/pip install -r requirements.txt --quiet 2>/dev/null || \
+    pip install -r requirements.txt --quiet
 
 echo "✅  Lancement de BoutikManager..."
 echo "────────────────────────────────────────────"

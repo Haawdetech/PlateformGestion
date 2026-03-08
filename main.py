@@ -100,16 +100,16 @@ def main():
     # Nécessaire avant QApplication sur certains systèmes
     os.environ.setdefault('QTWEBENGINE_CHROMIUM_FLAGS', '--disable-logging')
 
+    # DPI haute résolution — DOIT être appelé avant QApplication
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+
     app = QApplication(sys.argv)
     app.setApplicationName("BoutikManager")
     app.setApplicationDisplayName("BoutikManager")
     app.setApplicationVersion("2.0")
     app.setOrganizationName("BoutikManager")
-
-    # DPI haute résolution
-    app.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
 
     # Afficher le splash screen
     splash = make_splash()

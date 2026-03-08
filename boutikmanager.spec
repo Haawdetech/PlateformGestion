@@ -46,6 +46,7 @@ a = Analysis(
         'PySide6.QtWebEngineCore',
         'PySide6.QtWebChannel',
         'PySide6.QtPrintSupport',
+        'PySide6.QtPdf',
         'PySide6.QtNetwork',
         # Divers
         'json',
