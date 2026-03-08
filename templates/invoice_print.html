@@ -5,174 +5,211 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Facture {{ invoice.invoice_number }} — {{ settings.shop_name }}</title>
   <style>
-    /* ══════════════════════════════════════════════
-       INVOICE PRINT — Style ALIMENTATION KHEWAL
-       Black & white, minimal, table-bordered
-    ══════════════════════════════════════════════ */
-
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    body {
+    html, body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       color: #000;
       background: #fff;
     }
 
-    /* ── Page wrapper ── */
-    .page {
-      width: 210mm;
-      min-height: 297mm;
-      margin: 0 auto;
-      padding: 14mm 16mm 14mm 16mm;
+    /* ══ Wrapper : 2 exemplaires côte à côte en A4 paysage ══ */
+    .sheet {
+      width: 297mm;
+      height: 210mm;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
       background: #fff;
+      overflow: hidden;
     }
 
-    /* ══ HEADER ══
-       Two-column layout: left = shop info, right = date/ref/client */
+    /* Chaque exemplaire prend la moitié de la page (A5 portrait ~148mm) */
+    .copy {
+      flex: 0 0 50%;
+      padding: 8mm 7mm 8mm 7mm;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Trait de coupe au milieu ── */
+    .cut-line {
+      flex: 0 0 1px;
+      width: 1px;
+      background: transparent;
+      border-left: 1.5px dashed #888;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cut-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      font-size: 14px;
+      background: #fff;
+      padding: 2px;
+      line-height: 1;
+    }
+
+    /* ══ HEADER ══ */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
-    .header-left { flex: 0 0 55%; }
-    .header-right { flex: 0 0 42%; text-align: left; }
+    .header-left { flex: 0 0 54%; }
+    .header-right { flex: 0 0 44%; text-align: left; }
 
     .shop-name {
-      font-size: 14px;
+      font-size: 11px;
       font-weight: bold;
       text-transform: uppercase;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
     .shop-tagline,
     .shop-address,
     .shop-phone {
-      font-size: 10.5px;
-      line-height: 1.55;
+      font-size: 9px;
+      line-height: 1.5;
     }
 
     .header-right .label {
-      font-size: 10.5px;
-      line-height: 1.55;
+      font-size: 9px;
+      line-height: 1.5;
     }
 
-    .header-right .ref-num {
-      font-size: 10.5px;
-      font-weight: normal;
-      margin-top: 4px;
-    }
-
+    .header-right .ref-num,
     .header-right .client-name-ref {
-      font-size: 10.5px;
-      line-height: 1.55;
+      font-size: 9px;
+      line-height: 1.5;
     }
 
-    /* ══ CHERIF-style sub-header (client display name large) ══ */
+    /* ══ Nom client affiché grand ══ */
     .client-display {
-      font-size: 19px;
+      font-size: 14px;
       font-weight: bold;
       text-decoration: underline;
-      margin: 10px 0 6px 0;
+      margin: 5px 0 3px 0;
     }
 
-    /* ══ Invoice number line ══ */
+    /* ══ Numéro de facture ══ */
     .invoice-number-line {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .invoice-number-line .fact-label {
-      font-size: 13px;
+      font-size: 10px;
       font-weight: bold;
     }
 
     .invoice-number-line .original-label {
-      font-size: 10.5px;
+      font-size: 9px;
       font-weight: normal;
     }
 
-    /* ══ ITEMS TABLE ══ */
+    /* ══ TABLE ARTICLES ══ */
     .items-table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 0;
+      flex-grow: 0;   /* ne grandit pas pour remplir l'espace */
+      flex-shrink: 0; /* ne rétrécit pas non plus */
+      align-self: flex-start; /* hauteur = contenu uniquement */
     }
 
     .items-table th,
     .items-table td {
       border: 1px solid #000;
-      padding: 3px 6px;
-      font-size: 10.5px;
-      line-height: 1.45;
+      padding: 2px 4px;
+      font-size: 9px;
+      line-height: 1.4;
     }
 
-    /* Header row */
     .items-table thead th {
       font-weight: normal;
       text-align: left;
       background: #fff;
     }
 
-    .items-table thead th.col-qte      { width: 7%;  text-align: center; }
-    .items-table thead th.col-desc     { width: 51%; }
-    .items-table thead th.col-pu       { width: 21%; text-align: right; }
-    .items-table thead th.col-ttc      { width: 21%; text-align: right; }
+    .items-table thead th.col-qte  { width: 8%;  text-align: center; }
+    .items-table thead th.col-desc { width: 50%; }
+    .items-table thead th.col-pu   { width: 21%; text-align: right; }
+    .items-table thead th.col-ttc  { width: 21%; text-align: right; }
 
-    /* Body rows */
-    .items-table tbody td.col-qte      { text-align: center; }
-    .items-table tbody td.col-desc     { text-align: left; }
-    .items-table tbody td.col-pu       { text-align: right; }
-    .items-table tbody td.col-ttc      { text-align: right; }
+    .items-table tbody td.col-qte  { text-align: center; }
+    .items-table tbody td.col-desc { text-align: left; }
+    .items-table tbody td.col-pu   { text-align: right; }
+    .items-table tbody td.col-ttc  { text-align: right; }
 
-    /* Empty spacer row at the bottom of items */
-    .spacer-row td { border-left: 1px solid #000; border-right: 1px solid #000; border-top: none; border-bottom: none; height: 6px; }
+    /* Ligne vide séparatrice en bas du tableau articles */
+    .spacer-row td {
+      border: none;
+      border-left: 1px solid #000;
+      border-right: 1px solid #000;
+      height: 5px;
+    }
 
-    /* ══ FOOTER TABLE (totals + signatures) ══ */
+    /* ══ FOOTER TABLE : totaux + signatures ══ */
     .footer-table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: auto;    /* pousse le footer vers le bas de .copy */
+      flex-shrink: 0;
+      align-self: flex-end; /* colle au bas */
     }
 
     .footer-table td {
       border: 1px solid #000;
-      font-size: 10.5px;
-      padding: 3px 8px;
+      font-size: 9px;
+      padding: 2px 5px;
       text-align: center;
     }
 
     .footer-table .label-row td {
       font-weight: bold;
       text-transform: uppercase;
-      background: #fff;
     }
 
     .footer-table .value-row td {
       font-weight: normal;
-      background: #fff;
     }
 
     .footer-table .sig-row td {
       font-weight: bold;
       text-transform: uppercase;
-      height: 24px;
-      background: #fff;
+      height: 18px;
     }
 
-    /* Column widths in footer */
-    .footer-table .col-total  { width: 33%; }
+    .footer-table .col-total   { width: 33%; }
     .footer-table .col-acompte { width: 33%; }
-    .footer-table .col-net    { width: 34%; }
+    .footer-table .col-net     { width: 34%; }
 
-    /* ── Print controls (screen only) ── */
+    /* ══ Badge exemplaire (coin haut-droit) ══ */
+    .copy-badge {
+      font-size: 7px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: right;
+      color: #555;
+      margin-bottom: 3px;
+    }
+
+    /* ══ Boutons écran seulement ══ */
     .print-controls {
       position: fixed;
       bottom: 20px;
@@ -208,115 +245,218 @@
 
     .btn-do-print:hover { background: #333; }
 
-    /* ── Print media ── */
+    /* ══ Impression ══ */
     @media print {
-      html, body { background: #fff !important; }
-      .page {
-        margin: 0 !important;
-        padding: 10mm 12mm !important;
-        width: 100% !important;
-        min-height: unset !important;
+      html, body {
+        background: #fff !important;
+        width: 297mm;
+        height: 210mm;
+      }
+      .sheet {
+        width: 297mm !important;
+        height: 210mm !important;
+        page-break-after: avoid;
       }
       .print-controls { display: none !important; }
-      @page { margin: 0; size: A4; }
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
     }
   </style>
 </head>
 <body>
 
-<div class="page">
+<div class="sheet">
 
-  <!-- ══ HEADER: 2 colonnes ══ -->
-  <div class="header">
-    <!-- Gauche: infos boutique -->
-    <div class="header-left">
-      <div class="shop-name">{{ settings.shop_name }}</div>
-      {% if settings.shop_tagline %}
-      <div class="shop-tagline">{{ settings.shop_tagline }}</div>
-      {% else %}
-      <div class="shop-tagline">Vente en Gros &ndash; Demi gros &ndash; Details</div>
-      {% endif %}
-      {% if settings.shop_address %}
-      <div class="shop-address">{{ settings.shop_address }}</div>
-      {% endif %}
-      {% if settings.shop_phone %}
-      <div class="shop-phone">Tel: {{ settings.shop_phone }}</div>
-      {% endif %}
-    </div>
+  <!-- ════════════════════════════
+       EXEMPLAIRE GAUCHE : CLIENT
+  ════════════════════════════ -->
+  <div class="copy">
+    <div class="copy-badge">Exemplaire client</div>
 
-    <!-- Droite: date, ref, client -->
-    <div class="header-right">
-      <div class="label">Date {{ invoice.created_at | fmt_date_short }}</div>
-      <div class="label">Ref</div>
-      <div class="label">{{ invoice.created_at | fmt_date }}</div>
-      <br>
-      {% if invoice.client_phone %}
-      <div class="ref-num">{{ invoice.client_phone }}</div>
-      {% endif %}
-      <div class="client-name-ref">
-        {{ invoice.client_name or '' }}
-        {% if invoice.client_address %}{{ invoice.client_address }}{% endif %}
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="shop-name">{{ settings.shop_name }}</div>
+        {% if settings.shop_tagline %}
+        <div class="shop-tagline">{{ settings.shop_tagline }}</div>
+        {% else %}
+        <div class="shop-tagline">Vente en Gros &ndash; Demi gros &ndash; Détails</div>
+        {% endif %}
+        {% if settings.shop_address %}
+        <div class="shop-address">{{ settings.shop_address }}</div>
+        {% endif %}
+        {% if settings.shop_phone %}
+        <div class="shop-phone">Tel : {{ settings.shop_phone }}</div>
+        {% endif %}
+      </div>
+      <div class="header-right">
+        <div class="label">Date : {{ invoice.created_at | fmt_date_short }}</div>
+        <div class="label">Ref : {{ invoice.created_at | fmt_date }}</div>
+        {% if invoice.client_phone %}
+        <div class="ref-num">{{ invoice.client_phone }}</div>
+        {% endif %}
+        {% if invoice.client_name or invoice.client_address %}
+        <div class="client-name-ref">
+          {{ invoice.client_name or '' }}
+          {% if invoice.client_address %} — {{ invoice.client_address }}{% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
+
+    {% if invoice.client_name %}
+    <div class="client-display">{{ invoice.client_name | upper }}</div>
+    {% endif %}
+
+    <div class="invoice-number-line">
+      <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
+      <span class="original-label">Original</span>
+    </div>
+
+    <!-- Articles (div wrapper évite l'étirement flex de la table) -->
+    <div><table class="items-table">
+      <thead>
+        <tr>
+          <th class="col-qte">QTE</th>
+          <th class="col-desc">Désignation</th>
+          <th class="col-pu">Prix unit.</th>
+          <th class="col-ttc">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="col-qte">{{ item.quantity }}</td>
+          <td class="col-desc">
+            <div>{{ item.product_name }}</div>
+            {% if item.description %}
+            <div style="font-size:8px; color:#555; margin-top:1px;">{{ item.description }}</div>
+            {% endif %}
+          </td>
+          <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
+          <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+
+    <!-- Footer totaux -->
+    <table class="footer-table">
+      <tr class="label-row">
+        <td class="col-total">TOTAL</td>
+        <td class="col-acompte">ACOMPTE</td>
+        <td class="col-net">NET A PAYER</td>
+      </tr>
+      <tr class="value-row">
+        <td class="col-total">{{ invoice.total | fmt_price }}</td>
+        <td class="col-acompte">{{ paid_amt | fmt_price }}</td>
+        <td class="col-net">{{ remaining | fmt_price }}</td>
+      </tr>
+      <tr class="sig-row">
+        <td colspan="2">CAISSIER</td>
+        <td>LIVRAISON</td>
+      </tr>
+    </table>
   </div>
 
-  <!-- ══ Grand nom client (style CHERIF) ══ -->
-  {% if invoice.client_name %}
-  <div class="client-display">{{ invoice.client_name | upper }}</div>
-  {% endif %}
-
-  <!-- ══ Numéro de facture ══ -->
-  <div class="invoice-number-line">
-    <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
-    <span class="original-label">Original</span>
+  <!-- ════ TRAIT DE COUPE ════ -->
+  <div class="cut-line">
+    <span class="cut-icon">✂</span>
   </div>
 
-  <!-- ══ TABLE ARTICLES ══ -->
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th class="col-qte">QTE</th>
-        <th class="col-desc"></th>
-        <th class="col-pu">Prix unitaire</th>
-        <th class="col-ttc">Montant TTC</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in items %}
-      <tr>
-        <td class="col-qte">{{ item.quantity }}</td>
-        <td class="col-desc">{{ item.product_name }}</td>
-        <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
-        <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
-      </tr>
-      {% endfor %}
-      <!-- Ligne vide séparatrice -->
-      <tr class="spacer-row">
-        <td colspan="4" style="border:none; border-left:1px solid #000; border-right:1px solid #000; height:8px;"></td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- ════════════════════════════
+       EXEMPLAIRE DROITE : BOUTIQUE
+  ════════════════════════════ -->
+  <div class="copy">
+    <div class="copy-badge">Exemplaire boutique</div>
 
-  <!-- ══ FOOTER TABLE: totaux + signatures ══ -->
-  <table class="footer-table">
-    <!-- Ligne labels -->
-    <tr class="label-row">
-      <td class="col-total">TOTAL</td>
-      <td class="col-acompte">ACOMPTE</td>
-      <td class="col-net">NET A PAYER</td>
-    </tr>
-    <!-- Ligne valeurs -->
-    <tr class="value-row">
-      <td class="col-total">{{ invoice.total | fmt_price }}</td>
-      <td class="col-acompte">{{ paid_amt | fmt_price }}</td>
-      <td class="col-net">{{ remaining | fmt_price }}</td>
-    </tr>
-    <!-- Ligne signatures -->
-    <tr class="sig-row">
-      <td colspan="2">CAISSIER</td>
-      <td>LIVRAISON</td>
-    </tr>
-  </table>
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="shop-name">{{ settings.shop_name }}</div>
+        {% if settings.shop_tagline %}
+        <div class="shop-tagline">{{ settings.shop_tagline }}</div>
+        {% else %}
+        <div class="shop-tagline">Vente en Gros &ndash; Demi gros &ndash; Détails</div>
+        {% endif %}
+        {% if settings.shop_address %}
+        <div class="shop-address">{{ settings.shop_address }}</div>
+        {% endif %}
+        {% if settings.shop_phone %}
+        <div class="shop-phone">Tel : {{ settings.shop_phone }}</div>
+        {% endif %}
+      </div>
+      <div class="header-right">
+        <div class="label">Date : {{ invoice.created_at | fmt_date_short }}</div>
+        <div class="label">Ref : {{ invoice.created_at | fmt_date }}</div>
+        {% if invoice.client_phone %}
+        <div class="ref-num">{{ invoice.client_phone }}</div>
+        {% endif %}
+        {% if invoice.client_name or invoice.client_address %}
+        <div class="client-name-ref">
+          {{ invoice.client_name or '' }}
+          {% if invoice.client_address %} — {{ invoice.client_address }}{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if invoice.client_name %}
+    <div class="client-display">{{ invoice.client_name | upper }}</div>
+    {% endif %}
+
+    <div class="invoice-number-line">
+      <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
+      <span class="original-label">Copie</span>
+    </div>
+
+    <!-- Articles (div wrapper évite l'étirement flex de la table) -->
+    <div><table class="items-table">
+      <thead>
+        <tr>
+          <th class="col-qte">QTE</th>
+          <th class="col-desc">Désignation</th>
+          <th class="col-pu">Prix unit.</th>
+          <th class="col-ttc">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="col-qte">{{ item.quantity }}</td>
+          <td class="col-desc">
+            <div>{{ item.product_name }}</div>
+            {% if item.description %}
+            <div style="font-size:8px; color:#555; margin-top:1px;">{{ item.description }}</div>
+            {% endif %}
+          </td>
+          <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
+          <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+
+    <!-- Footer totaux -->
+    <table class="footer-table">
+      <tr class="label-row">
+        <td class="col-total">TOTAL</td>
+        <td class="col-acompte">ACOMPTE</td>
+        <td class="col-net">NET A PAYER</td>
+      </tr>
+      <tr class="value-row">
+        <td class="col-total">{{ invoice.total | fmt_price }}</td>
+        <td class="col-acompte">{{ paid_amt | fmt_price }}</td>
+        <td class="col-net">{{ remaining | fmt_price }}</td>
+      </tr>
+      <tr class="sig-row">
+        <td colspan="2">CAISSIER</td>
+        <td>LIVRAISON</td>
+      </tr>
+    </table>
+  </div>
 
 </div>
 
@@ -326,7 +466,7 @@
     &larr; Retour
   </a>
   <button class="btn-do-print" onclick="window.print()">
-    Imprimer / PDF
+    🖨 Imprimer / PDF
   </button>
 </div>
 

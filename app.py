@@ -811,10 +811,10 @@ def add_payment(iid):
     note = request.form.get('note','').strip() or None
     conn.execute('INSERT INTO payments (invoice_id, amount, note) VALUES (?,?,?)', (iid, amount, note))
 
-    # Recalcul statut
+    # Recalcul statut (la somme inclut déjà le nouveau versement inséré)
     paid_total = conn.execute(
         'SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE invoice_id=?', (iid,)
-    ).fetchone()['s'] + amount
+    ).fetchone()['s']
     if paid_total >= invoice['total']:
         status = 'paye'
     elif paid_total > 0:
