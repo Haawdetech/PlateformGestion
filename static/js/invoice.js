@@ -76,38 +76,34 @@ function buildOptions() {
 
 function buildRowHTML(rowId) {
   return `
-  <div class="card-body py-3 px-4">
-    <div class="row g-3 align-items-start">
-      <div class="col-lg-3 col-md-6">
-        <label class="form-label">Catalogue</label>
+  <div class="card-body py-2 px-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-lg-2 col-md-5">
+        <label class="form-label small mb-1">Catalogue</label>
         <select class="form-select form-select-sm" id="product-select-${rowId}" onchange="onProductSelect(${rowId})">
           ${buildOptions()}
         </select>
         <input type="hidden" name="item_product_id[]" id="pid-${rowId}" value="">
       </div>
-      <div class="col-lg-3 col-md-6">
-        <label class="form-label">Désignation <span class="text-danger">*</span></label>
+      <div class="col-lg-4 col-md-7">
+        <label class="form-label small mb-1">Désignation <span class="text-danger">*</span></label>
         <input type="text" class="form-control form-control-sm" name="item_name[]" id="name-${rowId}" placeholder="Nom du produit / service" required>
         <input type="hidden" name="item_description[]" id="desc-${rowId}" value="">
       </div>
       <div class="col-lg-2 col-md-4">
-        <label class="form-label">Prix U. <span class="text-danger">*</span></label>
-        <div class="input-group input-group-sm">
-          <input type="number" class="form-control" name="item_price[]" id="price-${rowId}" step="0.01" min="0" placeholder="0.00" required oninput="updateSubtotal(${rowId})">
-          <span class="input-group-text fw-semibold">${CURRENCY}</span>
-        </div>
+        <label class="form-label small mb-1">Prix U. (${CURRENCY}) <span class="text-danger">*</span></label>
+        <input type="number" class="form-control form-control-sm" name="item_price[]" id="price-${rowId}" step="0.01" min="0" placeholder="0.00" required oninput="updateSubtotal(${rowId})">
       </div>
       <div class="col-lg-1 col-md-2">
-        <label class="form-label">Qté <span class="text-danger">*</span></label>
+        <label class="form-label small mb-1">Qté <span class="text-danger">*</span></label>
         <input type="number" class="form-control form-control-sm" name="item_quantity[]" id="qty-${rowId}" min="1" value="1" required oninput="updateSubtotal(${rowId})">
       </div>
       <div class="col-lg-2 col-md-4">
-        <label class="form-label">Sous-total</label>
-        <div class="fw-bold text-primary fs-6 pt-1" id="subtotal-${rowId}">0,00 ${CURRENCY}</div>
+        <label class="form-label small mb-1">Sous-total</label>
+        <div class="fw-bold text-primary pt-1" id="subtotal-${rowId}">0,00 ${CURRENCY}</div>
       </div>
       <div class="col-lg-1 col-md-2 text-end">
-        <label class="form-label d-block">&nbsp;</label>
-        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeItemRow(${rowId})" title="Supprimer">
+        <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeItemRow(${rowId})" title="Supprimer">
           <i class="bi bi-trash3-fill"></i>
         </button>
       </div>

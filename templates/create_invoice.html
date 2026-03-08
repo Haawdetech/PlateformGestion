@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title"><i class="bi bi-plus-square-fill me-2 text-primary"></i>Nouvelle Facture</h1>
-    <p class="page-subtitle">Remplissez les informations client et ajoutez les articles.</p>
+    <p class="page-subtitle">Recherchez un client, ajoutez les articles.</p>
   </div>
   <a href="{{ url_for('invoices') }}" class="btn btn-outline-secondary">
     <i class="bi bi-arrow-left me-1"></i>Retour
@@ -14,95 +14,113 @@
 </div>
 
 <form method="POST" onsubmit="return validateForm()">
-  <div class="row g-4">
 
-    <!-- ═══ Colonne gauche (client) ═══ -->
-    <div class="col-lg-3">
+  <!-- ═══ Champs cachés client ═══ -->
+  <input type="hidden" name="client_id"      id="hidden-client-id">
+  <input type="hidden" name="client_name"    id="hidden-client-name">
+  <input type="hidden" name="client_phone"   id="hidden-client-phone">
+  <input type="hidden" name="client_email"   id="hidden-client-email">
+  <input type="hidden" name="client_address" id="hidden-client-address">
 
-      <!-- Informations client -->
-      <div class="card mb-3">
-        <div class="card-header py-2">
-          <i class="bi bi-person-fill me-1"></i>Client
-          <span class="text-muted fw-normal small ms-1">(optionnel)</span>
+  <!-- ═══ Barre client (pleine largeur) ═══ -->
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-auto">
+          <label class="form-label mb-0 fw-semibold">
+            <i class="bi bi-person-fill me-1 text-primary"></i>Client
+          </label>
         </div>
-        <div class="card-body p-3">
-          <div class="mb-2">
-            <label class="form-label mb-1 small fw-semibold" for="client_name">Nom / Raison sociale</label>
-            <input type="text" class="form-control form-control-sm" id="client_name" name="client_name"
-                   placeholder="Nom ou société...">
+        <div class="col position-relative">
+          <!-- Champ de recherche -->
+          <div id="client-search-box">
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" class="form-control" id="client-search-input"
+                     placeholder="Rechercher un client par nom ou téléphone..."
+                     autocomplete="off">
+              <button type="button" class="btn btn-outline-success" onclick="window.open('{{ url_for('add_client') }}','_blank')" title="Nouveau client">
+                <i class="bi bi-person-plus-fill me-1"></i>Nouveau
+              </button>
+            </div>
+            <!-- Dropdown résultats -->
+            <div id="client-dropdown" class="list-group shadow-sm position-absolute w-100"
+                 style="z-index:1000;top:100%;display:none;max-height:240px;overflow-y:auto;">
+            </div>
           </div>
-          <div class="mb-2">
-            <label class="form-label mb-1 small fw-semibold" for="client_phone">Téléphone</label>
-            <input type="tel" class="form-control form-control-sm" id="client_phone" name="client_phone"
-                   placeholder="+221 XX XXX XXXX">
-          </div>
-          <div class="mb-2">
-            <label class="form-label mb-1 small fw-semibold" for="client_email">Email</label>
-            <input type="email" class="form-control form-control-sm" id="client_email" name="client_email"
-                   placeholder="client@email.com">
-          </div>
-          <div class="mb-0">
-            <label class="form-label mb-1 small fw-semibold" for="client_address">Adresse</label>
-            <textarea class="form-control form-control-sm" id="client_address" name="client_address"
-                      rows="2" placeholder="Adresse..."></textarea>
+          <!-- Badge client sélectionné -->
+          <div id="client-selected-box" style="display:none;">
+            <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#e8f4ff;border:1px solid #bee3f8;">
+              <i class="bi bi-person-check-fill text-primary fs-5"></i>
+              <div class="flex-grow-1">
+                <div class="fw-bold" id="selected-name"></div>
+                <div class="text-muted small" id="selected-info"></div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearClient()" title="Retirer le client">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Notes -->
-      <div class="card">
-        <div class="card-header py-2">
-          <i class="bi bi-sticky-fill me-1"></i>Notes
-        </div>
-        <div class="card-body p-3">
-          <textarea class="form-control form-control-sm" name="notes" rows="3"
-                    placeholder="Conditions paiement, observations..."></textarea>
+        <div class="col-auto text-muted small fst-italic">
+          ou laisser vide pour un passage caisse
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- ═══ Colonne droite (articles) ═══ -->
-    <div class="col-lg-9">
+  <!-- ═══ Articles (pleine largeur) ═══ -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-cart3 me-2"></i>Articles de la facture</span>
+      <button type="button" class="btn btn-sm btn-primary" onclick="addItemRow()">
+        <i class="bi bi-plus-lg me-1"></i>Ajouter un article
+      </button>
+    </div>
+    <div class="card-body p-3">
 
-      <!-- Articles -->
-      <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-cart3 me-2"></i>Articles de la facture</span>
-          <button type="button" class="btn btn-sm btn-primary" onclick="addItemRow()">
-            <i class="bi bi-plus-lg me-1"></i>Ajouter un article
-          </button>
-        </div>
-        <div class="card-body p-4">
-
-          <!-- Message quand vide -->
-          <div id="no-items-msg" class="text-center py-4 text-muted" style="display:none;">
-            <i class="bi bi-cart-x fs-1 opacity-25 d-block mb-2"></i>
-            Aucun article. Cliquez sur « Ajouter un article ».
-          </div>
-
-          <!-- Lignes d'articles (générées par JS) -->
-          <div id="items-container"></div>
-
-          <!-- Total -->
-          <div class="total-box mt-3">
-            <div class="total-label">Total de la facture</div>
-            <div class="total-amount" id="grand-total">0,00 {{ currency }}</div>
-          </div>
-        </div>
+      <!-- Message quand vide -->
+      <div id="no-items-msg" class="text-center py-4 text-muted">
+        <i class="bi bi-cart-x fs-1 opacity-25 d-block mb-2"></i>
+        Aucun article. Cliquez sur « Ajouter un article ».
       </div>
 
-      <!-- Bouton enregistrer -->
-      <div class="d-flex gap-3 justify-content-end">
+      <!-- Lignes d'articles (générées par JS) -->
+      <div id="items-container"></div>
+
+      <!-- Total -->
+      <div class="total-box mt-3">
+        <div class="total-label">Total de la facture</div>
+        <div class="total-amount" id="grand-total">0,00 {{ currency }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Notes + Boutons ═══ -->
+  <div class="row g-3 align-items-end">
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-body py-2 px-3">
+          <label class="form-label mb-1 small fw-semibold">
+            <i class="bi bi-sticky-fill me-1"></i>Notes (optionnel)
+          </label>
+          <textarea class="form-control form-control-sm" name="notes" rows="2"
+                    placeholder="Conditions de paiement, observations..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="d-flex gap-2 justify-content-end">
         <a href="{{ url_for('invoices') }}" class="btn btn-outline-secondary btn-lg px-4">
           <i class="bi bi-x-lg me-1"></i>Annuler
         </a>
         <button type="submit" class="btn btn-success btn-lg px-5">
-          <i class="bi bi-check-circle-fill me-2"></i>Enregistrer la facture
+          <i class="bi bi-check-circle-fill me-2"></i>Créer la facture
         </button>
       </div>
     </div>
-
   </div>
+
 </form>
 
 {% endblock %}
@@ -113,4 +131,86 @@
   const EXISTING_ITEMS = [];
 </script>
 <script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
+<script>
+/* ── Autocomplete client ── */
+let clientSearchTimer = null;
+
+document.getElementById('client-search-input').addEventListener('input', function() {
+  clearTimeout(clientSearchTimer);
+  const q = this.value.trim();
+  if (q.length < 1) { closeDropdown(); return; }
+  clientSearchTimer = setTimeout(() => searchClients(q), 200);
+});
+
+document.getElementById('client-search-input').addEventListener('focus', function() {
+  if (this.value.trim().length >= 1) searchClients(this.value.trim());
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#client-search-box')) closeDropdown();
+});
+
+function closeDropdown() {
+  document.getElementById('client-dropdown').style.display = 'none';
+}
+
+async function searchClients(q) {
+  try {
+    const res  = await fetch('/api/clients?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    renderDropdown(data);
+  } catch(e) { closeDropdown(); }
+}
+
+function renderDropdown(clients) {
+  const dd = document.getElementById('client-dropdown');
+  if (!clients.length) {
+    dd.innerHTML = '<div class="list-group-item text-muted small py-2">Aucun résultat</div>';
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = clients.map(c => `
+    <button type="button" class="list-group-item list-group-item-action py-2"
+            onclick="selectClient(${c.id}, ${JSON.stringify(c.name)}, ${JSON.stringify(c.phone||'')}, ${JSON.stringify(c.email||'')}, ${JSON.stringify(c.address||'')})">
+      <div class="fw-semibold">${escHtmlClient(c.name)}</div>
+      <div class="text-muted small">${c.phone ? c.phone : ''}${c.phone && c.email ? ' · ' : ''}${c.email ? c.email : ''}</div>
+    </button>
+  `).join('');
+  dd.style.display = 'block';
+}
+
+function escHtmlClient(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])
+  );
+}
+
+function selectClient(id, name, phone, email, address) {
+  document.getElementById('hidden-client-id').value      = id;
+  document.getElementById('hidden-client-name').value    = name;
+  document.getElementById('hidden-client-phone').value   = phone;
+  document.getElementById('hidden-client-email').value   = email;
+  document.getElementById('hidden-client-address').value = address;
+
+  document.getElementById('selected-name').textContent = name;
+  const info = [phone, email].filter(Boolean).join(' · ');
+  document.getElementById('selected-info').textContent = info;
+
+  document.getElementById('client-search-box').style.display  = 'none';
+  document.getElementById('client-selected-box').style.display = 'block';
+  closeDropdown();
+}
+
+function clearClient() {
+  document.getElementById('hidden-client-id').value      = '';
+  document.getElementById('hidden-client-name').value    = '';
+  document.getElementById('hidden-client-phone').value   = '';
+  document.getElementById('hidden-client-email').value   = '';
+  document.getElementById('hidden-client-address').value = '';
+
+  document.getElementById('client-search-input').value   = '';
+  document.getElementById('client-search-box').style.display  = 'block';
+  document.getElementById('client-selected-box').style.display = 'none';
+}
+</script>
 {% endblock %}

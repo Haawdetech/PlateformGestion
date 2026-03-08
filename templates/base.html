@@ -44,6 +44,12 @@
         <span>Produits</span>
       </a>
 
+      <a href="{{ url_for('clients') }}"
+         class="sidebar-link {% if request.endpoint in ['clients','client_detail','add_client','edit_client'] %}active{% endif %}">
+        <i class="bi bi-people-fill"></i>
+        <span>Clients</span>
+      </a>
+
       <a href="{{ url_for('invoices') }}"
          class="sidebar-link {% if request.endpoint in ['invoices','invoice_detail','create_invoice'] %}active{% endif %}">
         <i class="bi bi-receipt-cutoff"></i>

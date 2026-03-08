@@ -38,7 +38,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '2.7'
+APP_VERSION = '2.8'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -93,6 +93,14 @@ def init_db():
             FOREIGN KEY (invoice_id) REFERENCES invoices(id),
             FOREIGN KEY (product_id) REFERENCES products(id)
         );
+        CREATE TABLE IF NOT EXISTS clients (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            name       TEXT    NOT NULL,
+            phone      TEXT,
+            email      TEXT,
+            address    TEXT,
+            created_at TEXT    DEFAULT (datetime('now', 'localtime'))
+        );
         CREATE TABLE IF NOT EXISTS settings (
             key   TEXT PRIMARY KEY,
             value TEXT
@@ -117,6 +125,13 @@ def init_db():
     # Migration : ajouter purchase_price (prix d'achat) si colonne absente
     try:
         conn.execute("ALTER TABLE products ADD COLUMN purchase_price REAL DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration : ajouter client_id sur invoices
+    try:
+        conn.execute("ALTER TABLE invoices ADD COLUMN client_id INTEGER REFERENCES clients(id)")
         conn.commit()
     except Exception:
         pass
@@ -721,17 +736,32 @@ def create_invoice():
             conn.close()
             return render_template('create_invoice.html', products=prods)
 
+        # Résoudre le client : si client_id fourni, copier ses infos
+        client_id  = request.form.get('client_id', '').strip() or None
+        c_name     = request.form.get('client_name', '').strip() or None
+        c_phone    = request.form.get('client_phone', '').strip() or None
+        c_email    = request.form.get('client_email', '').strip() or None
+        c_address  = request.form.get('client_address', '').strip() or None
+
+        if client_id:
+            conn_c  = get_db()
+            client  = conn_c.execute('SELECT * FROM clients WHERE id=?', (client_id,)).fetchone()
+            conn_c.close()
+            if client:
+                c_name    = client['name']
+                c_phone   = client['phone']
+                c_email   = client['email']
+                c_address = client['address']
+
         invoice_number = generate_invoice_number()
         conn = get_db()
         cur  = conn.execute(
             '''INSERT INTO invoices
-               (invoice_number, client_name, client_email, client_address, client_phone, notes, total)
-               VALUES (?, ?, ?, ?, ?, ?, ?)''',
+               (invoice_number, client_id, client_name, client_email, client_address, client_phone, notes, total)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
             (invoice_number,
-             request.form.get('client_name', '').strip() or None,
-             request.form.get('client_email', '').strip() or None,
-             request.form.get('client_address', '').strip() or None,
-             request.form.get('client_phone', '').strip() or None,
+             int(client_id) if client_id else None,
+             c_name, c_email, c_address, c_phone,
              request.form.get('notes', '').strip() or None,
              total)
         )
@@ -923,6 +953,132 @@ def delete_invoice(iid):
         flash(f'Facture {invoice["invoice_number"]} supprimée.', 'warning')
     conn.close()
     return redirect(url_for('invoices'))
+
+
+# ══════════════════════════ CLIENTS ═════════════════════════════════
+
+@app.route('/clients')
+@login_required
+def clients():
+    conn = get_db()
+    rows = conn.execute('''
+        SELECT c.*,
+               COUNT(i.id) AS invoice_count,
+               COALESCE(SUM(i.total), 0) AS total_amount
+        FROM clients c
+        LEFT JOIN invoices i ON i.client_id = c.id
+        GROUP BY c.id
+        ORDER BY c.name COLLATE NOCASE
+    ''').fetchall()
+    conn.close()
+    return render_template('clients.html', clients=rows)
+
+
+@app.route('/clients/nouveau', methods=['GET', 'POST'])
+@login_required
+def add_client():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Le nom du client est obligatoire.', 'danger')
+            return render_template('client_form.html', client=None)
+        conn = get_db()
+        conn.execute(
+            'INSERT INTO clients (name, phone, email, address) VALUES (?, ?, ?, ?)',
+            (name,
+             request.form.get('phone', '').strip() or None,
+             request.form.get('email', '').strip() or None,
+             request.form.get('address', '').strip() or None)
+        )
+        conn.commit()
+        conn.close()
+        flash(f'Client « {name} » créé avec succès !', 'success')
+        return redirect(url_for('clients'))
+    return render_template('client_form.html', client=None)
+
+
+@app.route('/clients/<int:cid>')
+@login_required
+def client_detail(cid):
+    conn   = get_db()
+    client = conn.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone()
+    if not client:
+        conn.close()
+        flash('Client introuvable.', 'danger')
+        return redirect(url_for('clients'))
+    invs = conn.execute(
+        'SELECT * FROM invoices WHERE client_id=? ORDER BY created_at DESC', (cid,)
+    ).fetchall()
+    conn.close()
+    return render_template('client_detail.html', client=client, invoices=invs)
+
+
+@app.route('/clients/<int:cid>/modifier', methods=['GET', 'POST'])
+@login_required
+def edit_client(cid):
+    conn   = get_db()
+    client = conn.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone()
+    if not client:
+        conn.close()
+        flash('Client introuvable.', 'danger')
+        return redirect(url_for('clients'))
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Le nom du client est obligatoire.', 'danger')
+            conn.close()
+            return render_template('client_form.html', client=client)
+        conn.execute(
+            'UPDATE clients SET name=?, phone=?, email=?, address=? WHERE id=?',
+            (name,
+             request.form.get('phone', '').strip() or None,
+             request.form.get('email', '').strip() or None,
+             request.form.get('address', '').strip() or None,
+             cid)
+        )
+        conn.commit()
+        conn.close()
+        flash(f'Client « {name} » mis à jour.', 'success')
+        return redirect(url_for('client_detail', cid=cid))
+    conn.close()
+    return render_template('client_form.html', client=client)
+
+
+@app.route('/clients/<int:cid>/supprimer', methods=['POST'])
+@login_required
+def delete_client(cid):
+    conn   = get_db()
+    client = conn.execute('SELECT name FROM clients WHERE id=?', (cid,)).fetchone()
+    if client:
+        # Retirer le lien sur les factures mais garder les infos texte
+        conn.execute('UPDATE invoices SET client_id=NULL WHERE client_id=?', (cid,))
+        conn.execute('DELETE FROM clients WHERE id=?', (cid,))
+        conn.commit()
+        flash(f'Client « {client["name"]} » supprimé.', 'warning')
+    conn.close()
+    return redirect(url_for('clients'))
+
+
+@app.route('/api/clients')
+@login_required
+def api_clients():
+    q    = request.args.get('q', '').strip()
+    conn = get_db()
+    if q:
+        pattern = f'%{q}%'
+        rows = conn.execute(
+            'SELECT id, name, phone, email, address FROM clients '
+            'WHERE name LIKE ? OR phone LIKE ? '
+            'ORDER BY name COLLATE NOCASE LIMIT 15',
+            (pattern, pattern)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            'SELECT id, name, phone, email, address FROM clients '
+            'ORDER BY name COLLATE NOCASE LIMIT 15'
+        ).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
 
 
 # ══════════════════════════ SETTINGS ════════════════════════════════
