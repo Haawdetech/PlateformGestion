@@ -38,7 +38,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '2.8'
+APP_VERSION = '2.9'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -1179,12 +1179,45 @@ def auto_update():
         # ── 2. Télécharger dans un dossier temporaire ────────────────────
         tmp_dir  = tempfile.mkdtemp(prefix='boutik_update_')
         zip_path = os.path.join(tmp_dir, asset_name)
-        req_dl = urllib.request.Request(
-            download_url, headers={'User-Agent': 'BoutikManager'}
-        )
-        with urllib.request.urlopen(req_dl, timeout=300) as resp:
-            with open(zip_path, 'wb') as f:
-                shutil.copyfileobj(resp, f)
+
+        if is_windows:
+            # PowerShell WebClient : pile HTTP/SSL native Windows
+            # urllib sur Windows peut avoir des problèmes SSL avec GitHub CDN
+            ps_cmd = (
+                '[System.Net.ServicePointManager]::SecurityProtocol = '
+                '[System.Net.SecurityProtocolType]::Tls12; '
+                '$wc = New-Object System.Net.WebClient; '
+                '$wc.Headers.Add("User-Agent", "BoutikManager"); '
+                f'$wc.DownloadFile("{download_url}", "{zip_path}")'
+            )
+            dl_result = subprocess.run(
+                ['powershell', '-NoProfile', '-NonInteractive', '-Command', ps_cmd],
+                capture_output=True, text=True, timeout=300
+            )
+            if dl_result.returncode != 0:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return jsonify({'error': f'Erreur téléchargement : {dl_result.stderr[:300]}'}), 500
+        else:
+            req_dl = urllib.request.Request(
+                download_url, headers={'User-Agent': 'BoutikManager'}
+            )
+            with urllib.request.urlopen(req_dl, timeout=300) as resp:
+                with open(zip_path, 'wb') as f:
+                    shutil.copyfileobj(resp, f)
+
+        # ── 2b. Vérifier que c'est bien un ZIP avant d'extraire ──────────
+        if not zipfile.is_zipfile(zip_path):
+            fsize = os.path.getsize(zip_path)
+            with open(zip_path, 'rb') as _f:
+                head = _f.read(120)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            return jsonify({
+                'error': (
+                    f'Le fichier téléchargé n\'est pas un ZIP valide '
+                    f'(taille : {fsize} octets). '
+                    f'Début du fichier : {head}'
+                )
+            }), 500
 
         # ── 3. Extraire le ZIP ───────────────────────────────────────────
         with zipfile.ZipFile(zip_path, 'r') as z:
