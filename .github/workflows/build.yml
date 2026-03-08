@@ -1,4 +1,4 @@
-name: 🏗️ Build BoutikManager (PySide6)
+name: 🏗️ Build & Release BoutikManager
 
 on:
   push:
@@ -8,13 +8,42 @@ on:
 jobs:
 
   # ══════════════════════════════════════════
+  #  VÉRIFIER SI LA VERSION A CHANGÉ
+  #  (on ne rebuild que si APP_VERSION est nouvelle)
+  # ══════════════════════════════════════════
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version:     ${{ steps.read.outputs.version }}
+      should_release: ${{ steps.read.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔖 Lire APP_VERSION depuis app.py
+        id: read
+        run: |
+          VERSION=$(python3 -c "import re; m=re.search(r\"APP_VERSION = '([^']+)'\", open('app.py').read()); print(m.group(1))")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version détectée : v$VERSION"
+
+          # Vérifier si le tag existe déjà sur GitHub
+          if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q "v$VERSION"; then
+            echo "⚠️  Tag v$VERSION existe déjà — pas de nouvelle release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Nouvelle version v$VERSION — build + release"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+
+  # ══════════════════════════════════════════
   #  BUILD MAC
   # ══════════════════════════════════════════
   build-mac:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
     runs-on: macos-latest
     steps:
-      - name: 📥 Télécharger le code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: 🐍 Installer Python 3.12
         uses: actions/setup-python@v5
@@ -45,10 +74,11 @@ jobs:
   #  BUILD WINDOWS
   # ══════════════════════════════════════════
   build-windows:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
     runs-on: windows-latest
     steps:
-      - name: 📥 Télécharger le code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: 🐍 Installer Python 3.12
         uses: actions/setup-python@v5
@@ -76,49 +106,36 @@ jobs:
           retention-days: 30
 
   # ══════════════════════════════════════════
-  #  CRÉER UNE RELEASE AUTOMATIQUE
+  #  CRÉER LA RELEASE GITHUB
   # ══════════════════════════════════════════
   release:
-    needs: [build-mac, build-windows]
+    needs: [check-version, build-mac, build-windows]
+    if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: 📥 Télécharger le code
-        uses: actions/checkout@v4
-
-      - name: 🔖 Lire la version depuis app.py
-        run: |
-          VERSION=$(python3 -c "import re; m=re.search(r\"APP_VERSION = '([^']+)'\", open('app.py').read()); print(m.group(1))")
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
 
       - name: 📥 Télécharger les artifacts
         uses: actions/download-artifact@v4
 
-      - name: 🏷️ Créer la Release GitHub
+      - name: 🚀 Créer la Release GitHub v${{ needs.check-version.outputs.version }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION }}
-          name: "BoutikManager v${{ env.VERSION }}"
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: "BoutikManager v${{ needs.check-version.outputs.version }}"
           body: |
-            ## 📦 Télécharger BoutikManager v${{ env.VERSION }}
+            ## 📦 BoutikManager v${{ needs.check-version.outputs.version }}
 
-            | Système | Fichier | Notes |
-            |---------|---------|-------|
-            | 🍎 Mac  | `BoutikManager-Mac.zip` | Extraire → double-clic sur .app |
-            | 🪟 Windows | `BoutikManager-Windows.zip` | Extraire → lancer BoutikManager.exe |
+            | Système | Fichier | Instructions |
+            |---------|---------|--------------|
+            | 🍎 Mac | `BoutikManager-Mac.zip` | Extraire → clic droit sur .app → Ouvrir |
+            | 🪟 Windows | `BoutikManager-Windows.zip` | Extraire → double-clic sur `BoutikManager.exe` |
 
-            ### ✨ Nouveautés v2.0
-            - Interface fenêtre native (PySide6) — pas de navigateur requis
-            - Splash screen au démarrage
-            - F11 pour plein écran, F5 pour recharger
-            - Même design Bootstrap qu'avant
+            > **Mise à jour automatique** : si vous avez déjà l'application, un bouton « Installer maintenant » apparaîtra directement dans l'interface.
 
-            ### Installation
-            - **Mac** : Extraire le zip → Clic droit sur .app → Ouvrir (1ère fois)
-            - **Windows** : Extraire le zip → Double-clic sur `BoutikManager.exe`
-
-            Login par défaut : **admin** / **admin123**
+            **Login par défaut** : `admin` / `admin123`
           files: |
             BoutikManager-Mac/BoutikManager-Mac.zip
             BoutikManager-Windows/BoutikManager-Windows.zip
