@@ -12,6 +12,9 @@ import threading
 import time
 import urllib.request
 import subprocess
+import tempfile
+import zipfile
+import shutil
 
 # Fix: résolution DNS lente sur macOS / Python 3.14
 socket.getfqdn = lambda name='': 'localhost'
@@ -118,10 +121,20 @@ def init_db():
         ('shop_email',   'contact@monentreprise.ma'),
         ('shop_ice',     ''),
         ('currency',     'DH'),
-        ('github_repo',  ''),   # ex: monnom/BoutikManager
+        ('github_repo',  'Haawdetech/PlateformGestion'),
     ]
     for key, val in defaults:
         conn.execute('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', (key, val))
+
+    # Migration : pré-remplir github_repo si vide dans les BDs existantes
+    try:
+        conn.execute(
+            "UPDATE settings SET value = 'Haawdetech/PlateformGestion' "
+            "WHERE key = 'github_repo' AND (value IS NULL OR value = '')"
+        )
+        conn.commit()
+    except Exception:
+        pass
 
     # Créer admin par défaut si aucun utilisateur
     if not conn.execute('SELECT id FROM users LIMIT 1').fetchone():
@@ -908,62 +921,156 @@ def settings():
 @app.route('/api/auto-update')
 @login_required
 def auto_update():
-    """Télécharge et installe automatiquement la nouvelle version."""
-    if not getattr(sys, 'frozen', False):
-        return jsonify({'error': 'Auto-update disponible uniquement sur l\'exécutable compilé.'}), 400
-
-    s        = get_settings()
-    repo     = s.get('github_repo', '').strip()
+    """Télécharge et installe automatiquement la dernière version depuis GitHub."""
+    s    = get_settings()
+    repo = s.get('github_repo', '').strip()
     if not repo:
         return jsonify({'error': 'Dépôt GitHub non configuré dans les paramètres.'}), 400
 
+    is_windows = platform.system() == 'Windows'
+    is_mac     = platform.system() == 'Darwin'
+    is_frozen  = getattr(sys, 'frozen', False)
+
     try:
-        # 1 — Récupérer l'URL de téléchargement depuis GitHub API
+        # ── 1. Récupérer la dernière release GitHub ───────────────────────
         req = urllib.request.Request(
             f'https://api.github.com/repos/{repo}/releases/latest',
             headers={'User-Agent': 'BoutikManager'}
         )
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=15) as r:
             release = json.loads(r.read())
 
-        is_windows   = platform.system() == 'Windows'
-        asset_name   = 'BoutikManager.exe' if is_windows else 'BoutikManager'
+        # ── Mode développement : git pull + redémarrage ───────────────────
+        if not is_frozen:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            if is_windows:
+                script_path = os.path.join(script_dir, '_dev_update.bat')
+                script = (
+                    f'@echo off\r\n'
+                    f'cd /d "{script_dir}"\r\n'
+                    f'timeout /t 2 /nobreak >nul\r\n'
+                    f'git pull\r\n'
+                    f'start "" pythonw main.py\r\n'
+                    f'del "%~f0"\r\n'
+                )
+                with open(script_path, 'w') as f:
+                    f.write(script)
+                subprocess.Popen(['cmd', '/c', script_path],
+                                 creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                script_path = os.path.join(script_dir, '_dev_update.sh')
+                script = (
+                    f'#!/bin/bash\n'
+                    f'cd "{script_dir}"\n'
+                    f'sleep 2\n'
+                    f'git pull\n'
+                    f'python3 main.py &\n'
+                    f'rm -- "$0"\n'
+                )
+                with open(script_path, 'w') as f:
+                    f.write(script)
+                os.chmod(script_path, 0o755)
+                subprocess.Popen(['/bin/bash', script_path])
+            threading.Timer(1.5, lambda: os._exit(0)).start()
+            return jsonify({'success': True})
+
+        # ── Mode frozen : chercher l'asset ZIP pour cette plateforme ──────
+        platform_kw  = 'win' if is_windows else 'mac'
         download_url = None
+        asset_name   = None
         for asset in release.get('assets', []):
-            if asset['name'] == asset_name:
+            if platform_kw in asset['name'].lower():
                 download_url = asset['browser_download_url']
+                asset_name   = asset['name']
                 break
 
         if not download_url:
-            return jsonify({'error': f'Fichier {asset_name} introuvable dans la release.'}), 404
+            return jsonify({
+                'error': f'Aucun asset pour {platform.system()} trouvé dans la release.'
+            }), 404
 
-        # 2 — Télécharger la nouvelle version
-        current_exe = sys.executable
-        new_exe     = current_exe + '.new'
-        urllib.request.urlretrieve(download_url, new_exe)
+        # ── 2. Télécharger dans un dossier temporaire ────────────────────
+        tmp_dir  = tempfile.mkdtemp(prefix='boutik_update_')
+        zip_path = os.path.join(tmp_dir, asset_name)
+        urllib.request.urlretrieve(download_url, zip_path)
 
-        # 3 — Créer le script de remplacement + redémarrage
+        # ── 3. Extraire le ZIP ───────────────────────────────────────────
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extractall(tmp_dir)
+        os.remove(zip_path)
+
+        # ── 4a. Windows : remplacer l'exe ────────────────────────────────
         if is_windows:
-            script_path = current_exe + '_update.bat'
+            new_exe = None
+            for root, _dirs, files in os.walk(tmp_dir):
+                for f in files:
+                    if f.lower().endswith('.exe'):
+                        new_exe = os.path.join(root, f)
+                        break
+                if new_exe:
+                    break
+            if not new_exe:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return jsonify({'error': 'Aucun .exe trouvé dans le ZIP.'}), 500
+
+            current_exe = sys.executable
+            script_path = os.path.join(tmp_dir, '_update.bat')
             script = (
                 f'@echo off\r\n'
                 f'timeout /t 2 /nobreak >nul\r\n'
                 f'move /y "{new_exe}" "{current_exe}"\r\n'
                 f'start "" "{current_exe}"\r\n'
-                f'del "%~f0"\r\n'
+                f'rmdir /s /q "{tmp_dir}"\r\n'
             )
             with open(script_path, 'w') as f:
                 f.write(script)
             subprocess.Popen(['cmd', '/c', script_path],
                              creationflags=subprocess.CREATE_NO_WINDOW)
+
+        # ── 4b. macOS : remplacer le bundle .app ─────────────────────────
         else:
-            script_path = current_exe + '_update.sh'
+            # Trouver le nouveau .app extrait
+            new_app = None
+            for item in os.listdir(tmp_dir):
+                if item.endswith('.app'):
+                    new_app = os.path.join(tmp_dir, item)
+                    break
+            if not new_app:
+                for root, dirs, _files in os.walk(tmp_dir):
+                    for d in dirs:
+                        if d.endswith('.app'):
+                            new_app = os.path.join(root, d)
+                            break
+                    if new_app:
+                        break
+            if not new_app:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return jsonify({'error': 'Aucun .app trouvé dans le ZIP.'}), 500
+
+            # Remonter depuis sys.executable jusqu'au bundle .app
+            # ex: /Applications/BoutikManager.app/Contents/MacOS/BoutikManager
+            app_bundle = sys.executable
+            while app_bundle and not app_bundle.endswith('.app'):
+                parent = os.path.dirname(app_bundle)
+                if parent == app_bundle:
+                    app_bundle = None
+                    break
+                app_bundle = parent
+
+            if not app_bundle:
+                # Fallback si pas dans un .app standard
+                app_bundle = os.path.dirname(sys._MEIPASS)
+
+            install_dir = os.path.dirname(app_bundle)
+            dest_app    = os.path.join(install_dir, os.path.basename(new_app))
+
+            script_path = os.path.join(tmp_dir, '_update.sh')
             script = (
                 f'#!/bin/bash\n'
                 f'sleep 2\n'
-                f'mv "{new_exe}" "{current_exe}"\n'
-                f'chmod +x "{current_exe}"\n'
-                f'"{current_exe}" &\n'
+                f'rm -rf "{app_bundle}"\n'
+                f'mv "{new_app}" "{dest_app}"\n'
+                f'open "{dest_app}"\n'
                 f'rm -- "$0"\n'
             )
             with open(script_path, 'w') as f:
@@ -971,7 +1078,7 @@ def auto_update():
             os.chmod(script_path, 0o755)
             subprocess.Popen(['/bin/bash', script_path])
 
-        # 4 — Arrêter le serveur actuel après 1,5 s
+        # ── 5. Quitter l'app après 1,5 s ────────────────────────────────
         threading.Timer(1.5, lambda: os._exit(0)).start()
         return jsonify({'success': True})
 
