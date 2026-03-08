@@ -10,7 +10,7 @@
   --sidebar-bg:     #111827;
   --sidebar-hover:  rgba(255,255,255,.08);
   --sidebar-active: rgba(255,255,255,.14);
-  --sidebar-w:      248px;
+  --sidebar-w:      200px;
   --topbar-h:       54px;
   --dark:           #1a1a2e;
   --success:        #2f9e44;
@@ -78,30 +78,30 @@ body.app-body {
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: .85rem;
-  padding: 1.25rem 1rem 1.1rem;
+  gap: .6rem;
+  padding: .9rem .8rem .8rem;
   flex-shrink: 0;
 }
 
 .sidebar-logo-wrap {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   background: linear-gradient(135deg, #3b5bdb, #2f4ac0);
-  border-radius: 12px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59,91,219,.4);
+  box-shadow: 0 3px 8px rgba(59,91,219,.4);
 }
 
-.sidebar-emoji { font-size: 1.4rem; line-height: 1; }  /* rétrocompat */
-.sidebar-logo-icon { font-size: 1.35rem; color: #fff; line-height: 1; }
+.sidebar-emoji { font-size: 1.1rem; line-height: 1; }  /* rétrocompat */
+.sidebar-logo-icon { font-size: 1.1rem; color: #fff; line-height: 1; }
 
 .sidebar-brand-text { min-width: 0; }
 
 .sidebar-shop-name {
-  font-size: .95rem;
+  font-size: .82rem;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -111,7 +111,7 @@ body.app-body {
 }
 
 .sidebar-sub {
-  font-size: .7rem;
+  font-size: .63rem;
   color: rgba(255,255,255,.45);
   font-weight: 500;
   margin-top: 1px;
@@ -129,27 +129,27 @@ body.app-body {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  padding: .6rem .65rem;
-  gap: 2px;
+  padding: .4rem .5rem;
+  gap: 1px;
   flex-shrink: 0;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: .75rem;
-  padding: .62rem .85rem;
-  border-radius: 9px;
+  gap: .6rem;
+  padding: .5rem .7rem;
+  border-radius: 7px;
   color: rgba(255,255,255,.7);
   text-decoration: none;
-  font-size: .88rem;
+  font-size: .82rem;
   font-weight: 500;
   transition: background .15s ease, color .15s ease;
 }
 
 .sidebar-link i {
-  font-size: 1.1rem;
-  width: 20px;
+  font-size: 1rem;
+  width: 18px;
   text-align: center;
   flex-shrink: 0;
   opacity: .8;
@@ -173,11 +173,11 @@ body.app-body {
 
 /* ── Carte mise à jour ── */
 .sidebar-update-card {
-  margin: 0 .65rem .5rem;
+  margin: 0 .5rem .4rem;
   background: rgba(245,159,0,.12);
   border: 1px solid rgba(245,159,0,.25);
-  border-radius: 10px;
-  padding: .9rem 1rem;
+  border-radius: 8px;
+  padding: .65rem .75rem;
   flex-shrink: 0;
 }
 
@@ -221,7 +221,7 @@ body.app-body {
 
 /* ── Bouton nouvelle facture ── */
 .sidebar-action-section {
-  padding: .4rem .65rem .55rem;
+  padding: .3rem .5rem .4rem;
   flex-shrink: 0;
 }
 
@@ -229,15 +229,15 @@ body.app-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: .65rem 1rem;
+  padding: .5rem .75rem;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
   text-decoration: none;
-  font-size: .85rem;
+  font-size: .78rem;
   font-weight: 600;
   transition: opacity .15s, transform .15s, box-shadow .15s;
-  box-shadow: 0 4px 14px rgba(59,91,219,.35);
+  box-shadow: 0 3px 10px rgba(59,91,219,.35);
 }
 
 .sidebar-new-invoice-btn:hover {
@@ -251,28 +251,28 @@ body.app-body {
 .sidebar-user-section {
   display: flex;
   align-items: center;
-  gap: .6rem;
-  padding: .75rem 1rem;
+  gap: .4rem;
+  padding: .55rem .75rem;
   flex-shrink: 0;
 }
 
 .sidebar-user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   background: rgba(255,255,255,.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: .85rem;
   color: rgba(255,255,255,.8);
 }
 
 .sidebar-user-info { flex: 1; min-width: 0; }
 
 .sidebar-user-name {
-  font-size: .8rem;
+  font-size: .74rem;
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
@@ -299,15 +299,15 @@ body.app-body {
 }
 
 .sidebar-icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
+  border-radius: 5px;
   color: rgba(255,255,255,.55);
   text-decoration: none;
-  font-size: .95rem;
+  font-size: .82rem;
   transition: background .15s, color .15s;
 }
 
@@ -317,9 +317,9 @@ body.app-body {
 /* ── Version ── */
 .sidebar-version {
   text-align: center;
-  font-size: .65rem;
+  font-size: .6rem;
   color: rgba(255,255,255,.2);
-  padding: .4rem 0 .7rem;
+  padding: .3rem 0 .5rem;
   flex-shrink: 0;
 }
 
