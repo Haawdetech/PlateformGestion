@@ -38,7 +38,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '2.5'
+APP_VERSION = '2.6'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -1040,27 +1040,22 @@ def auto_update():
             current_dir = os.path.dirname(current_exe)   # C:\...\BoutikManager
             parent_dir  = os.path.dirname(current_dir)   # C:\...
 
-            # Trouver le nouveau dossier extrait dans tmp_dir
+            # Trouver BoutikManager.exe dans le ZIP extrait
+            # (robuste : gère 1 niveau BoutikManager/exe OU 2 niveaux BoutikManager/BoutikManager/exe)
             new_dir = None
-            for item in os.listdir(tmp_dir):
-                item_path = os.path.join(tmp_dir, item)
-                if os.path.isdir(item_path) and not item.startswith('.'):
-                    new_dir = item_path
-                    break
-
-            # Fallback : prendre le dossier parent du premier .exe trouvé
-            if not new_dir:
-                for root, _dirs, files in os.walk(tmp_dir):
-                    for f in files:
-                        if f.lower().endswith('.exe'):
-                            new_dir = root
-                            break
-                    if new_dir:
+            exe_found = None
+            for root, _dirs, files in os.walk(tmp_dir):
+                for f in files:
+                    if f.lower() == 'boutikmanager.exe':
+                        exe_found = os.path.join(root, f)
+                        new_dir   = root   # dossier qui contient l'exe
                         break
+                if new_dir:
+                    break
 
             if not new_dir:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
-                return jsonify({'error': 'Aucun dossier d\'application trouvé dans le ZIP.'}), 500
+                return jsonify({'error': 'BoutikManager.exe introuvable dans le ZIP.'}), 500
 
             # Chemin final après déplacement (même emplacement que l'actuel)
             dest_dir = os.path.join(parent_dir, os.path.basename(current_dir))

@@ -94,9 +94,14 @@ jobs:
         run: pyinstaller boutikmanager.spec --clean --noconfirm
 
       - name: 📦 Zipper le dossier dist
+        shell: pwsh
         run: |
-          cd dist
-          Compress-Archive -Path BoutikManager -DestinationPath BoutikManager-Windows.zip
+          # CreateFromDirectory est 100% fiable : garantit UN seul BoutikManager/ à la racine du ZIP
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $src = (Resolve-Path "dist\BoutikManager").Path
+          $dst = (Join-Path (Get-Location) "dist\BoutikManager-Windows.zip")
+          if (Test-Path $dst) { Remove-Item $dst -Force }
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($src, $dst, 'Optimal', $true)
 
       - name: 📤 Sauvegarder le build Windows
         uses: actions/upload-artifact@v4
