@@ -38,7 +38,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '2.6'
+APP_VERSION = '2.7'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -123,10 +123,13 @@ def init_db():
 
     defaults = [
         ('shop_name',    'Mon Entreprise'),
+        ('shop_tagline', ''),
         ('shop_address', '123 Rue Principale, Ville'),
         ('shop_phone',   '+212 6XX-XXXXXX'),
         ('shop_email',   'contact@monentreprise.ma'),
         ('shop_ice',     ''),
+        ('shop_ninea',   ''),
+        ('shop_rc',      ''),
         ('currency',     'DH'),
         ('github_repo',  'Haawdetech/PlateformGestion'),
     ]
@@ -929,7 +932,8 @@ def delete_invoice(iid):
 def settings():
     if request.method == 'POST':
         conn = get_db()
-        for field in ['shop_name', 'shop_address', 'shop_phone', 'shop_email', 'shop_ice', 'currency', 'github_repo']:
+        for field in ['shop_name', 'shop_tagline', 'shop_address', 'shop_phone', 'shop_email',
+                      'shop_ice', 'shop_ninea', 'shop_rc', 'currency', 'github_repo']:
             conn.execute(
                 'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
                 (field, request.form.get(field, '').strip())

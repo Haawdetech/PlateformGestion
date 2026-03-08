@@ -38,13 +38,6 @@
                    placeholder="Ex : Chemise coton, Service conseil..." required autofocus>
           </div>
 
-          <!-- Description -->
-          <div class="mb-4">
-            <label class="form-label" for="description">Description</label>
-            <textarea class="form-control" id="description" name="description"
-                      rows="3" placeholder="Description optionnelle du produit...">{{ product.description if product and product.description else '' }}</textarea>
-          </div>
-
           <!-- Prix d'achat & Prix de vente -->
           <div class="row g-3 mb-3">
             <div class="col-sm-6">

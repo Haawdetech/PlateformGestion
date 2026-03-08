@@ -299,6 +299,12 @@ html, body {
         {% if settings.shop_phone %}
         <div class="shop-phone">Tel : {{ settings.shop_phone }}</div>
         {% endif %}
+        {% if settings.shop_ninea %}
+        <div class="shop-phone">NINEA : {{ settings.shop_ninea }}</div>
+        {% endif %}
+        {% if settings.shop_rc %}
+        <div class="shop-phone">RC : {{ settings.shop_rc }}</div>
+        {% endif %}
       </div>
       <div class="header-right">
         <div class="label">Date : {{ invoice.created_at | fmt_date_short }}</div>
@@ -342,12 +348,7 @@ html, body {
         {% for item in page_items %}
         <tr>
           <td class="col-qte">{{ item.quantity }}</td>
-          <td class="col-desc">
-            <div>{{ item.product_name }}</div>
-            {% if item.description %}
-            <div class="item-sub-desc">{{ item.description }}</div>
-            {% endif %}
-          </td>
+          <td class="col-desc">{{ item.product_name }}</td>
           <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
           <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
         </tr>
@@ -410,6 +411,12 @@ html, body {
         {% if settings.shop_phone %}
         <div class="shop-phone">Tel : {{ settings.shop_phone }}</div>
         {% endif %}
+        {% if settings.shop_ninea %}
+        <div class="shop-phone">NINEA : {{ settings.shop_ninea }}</div>
+        {% endif %}
+        {% if settings.shop_rc %}
+        <div class="shop-phone">RC : {{ settings.shop_rc }}</div>
+        {% endif %}
       </div>
       <div class="header-right">
         <div class="label">Date : {{ invoice.created_at | fmt_date_short }}</div>
@@ -426,7 +433,7 @@ html, body {
       </div>
     </div>
 
-  
+
 
     <div class="invoice-number-line">
       <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
@@ -453,12 +460,7 @@ html, body {
         {% for item in page_items %}
         <tr>
           <td class="col-qte">{{ item.quantity }}</td>
-          <td class="col-desc">
-            <div>{{ item.product_name }}</div>
-            {% if item.description %}
-            <div class="item-sub-desc">{{ item.description }}</div>
-            {% endif %}
-          </td>
+          <td class="col-desc">{{ item.product_name }}</td>
           <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
           <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
         </tr>

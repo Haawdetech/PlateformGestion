@@ -102,9 +102,6 @@
               <td class="text-muted">{{ loop.index }}</td>
               <td>
                 <div class="fw-semibold">{{ item.product_name }}</div>
-                {% if item.description %}
-                  <div class="text-muted small">{{ item.description }}</div>
-                {% endif %}
               </td>
               <td class="text-center">{{ item.quantity }}</td>
               <td class="text-end text-muted">{{ item.unit_price | fmt_price }} {{ currency }}</td>

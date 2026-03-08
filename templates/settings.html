@@ -21,11 +21,23 @@
         <form method="POST">
 
           <!-- Nom -->
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label" for="shop_name">Nom de la boutique / Entreprise</label>
             <input type="text" class="form-control" id="shop_name" name="shop_name"
                    value="{{ s.shop_name or '' }}"
                    placeholder="Ex : Mon Entreprise, Boutique Alpha...">
+          </div>
+
+          <!-- Slogan / Tagline -->
+          <div class="mb-4">
+            <label class="form-label" for="shop_tagline">
+              Slogan / Activité
+              <span class="text-muted fw-normal">(optionnel)</span>
+            </label>
+            <input type="text" class="form-control" id="shop_tagline" name="shop_tagline"
+                   value="{{ s.shop_tagline or '' }}"
+                   placeholder="Ex : Vente en gros – Demi gros – Détails">
+            <div class="form-text">Affiché sous le nom de la boutique sur les factures.</div>
           </div>
 
           <!-- Adresse -->
@@ -51,9 +63,32 @@
             </div>
           </div>
 
-          <!-- ICE & Devise -->
-          <div class="row g-3 mb-4">
-            <div class="col-sm-6">
+          <!-- Identifiants légaux -->
+          <div class="mb-2">
+            <label class="form-label fw-semibold text-secondary small text-uppercase">
+              <i class="bi bi-file-earmark-text me-1"></i>Informations légales
+            </label>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+              <label class="form-label" for="shop_ninea">
+                NINEA
+                <span class="text-muted fw-normal">(optionnel)</span>
+              </label>
+              <input type="text" class="form-control" id="shop_ninea" name="shop_ninea"
+                     value="{{ s.shop_ninea or '' }}"
+                     placeholder="Ex : 12345678A">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label" for="shop_rc">
+                Registre Commerce
+                <span class="text-muted fw-normal">(optionnel)</span>
+              </label>
+              <input type="text" class="form-control" id="shop_rc" name="shop_rc"
+                     value="{{ s.shop_rc or '' }}"
+                     placeholder="Ex : SN-DKR-2024-B-1234">
+            </div>
+            <div class="col-sm-4">
               <label class="form-label" for="shop_ice">
                 ICE / N° Fiscal
                 <span class="text-muted fw-normal">(optionnel)</span>
@@ -61,8 +96,12 @@
               <input type="text" class="form-control" id="shop_ice" name="shop_ice"
                      value="{{ s.shop_ice or '' }}"
                      placeholder="000000000000000">
-              <div class="form-text">Affiché sur les factures PDF.</div>
             </div>
+          </div>
+          <div class="form-text mb-4">Ces identifiants sont affichés sur les factures PDF.</div>
+
+          <!-- Devise -->
+          <div class="row g-3 mb-4">
             <div class="col-sm-6">
               <label class="form-label" for="currency">Devise</label>
               <select class="form-select" id="currency" name="currency">
@@ -115,10 +154,15 @@
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <div class="fw-bold fs-5 text-primary">{{ settings.shop_name }}</div>
+            {% if settings.shop_tagline %}
+            <div class="text-muted small fst-italic">{{ settings.shop_tagline }}</div>
+            {% endif %}
             <div class="text-muted small mt-1" style="line-height:1.7;">
               {% if settings.shop_address %}{{ settings.shop_address }}<br>{% endif %}
-              {% if settings.shop_phone %}📞 {{ settings.shop_phone }}<br>{% endif %}
-              {% if settings.shop_email %}✉ {{ settings.shop_email }}<br>{% endif %}
+              {% if settings.shop_phone %}Tél : {{ settings.shop_phone }}<br>{% endif %}
+              {% if settings.shop_email %}{{ settings.shop_email }}<br>{% endif %}
+              {% if settings.shop_ninea %}NINEA : {{ settings.shop_ninea }}<br>{% endif %}
+              {% if settings.shop_rc %}RC : {{ settings.shop_rc }}<br>{% endif %}
               {% if settings.shop_ice %}ICE : {{ settings.shop_ice }}{% endif %}
             </div>
           </div>

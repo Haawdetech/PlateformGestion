@@ -56,13 +56,12 @@ function onProductSelect(rowId) {
       document.getElementById(`pid-${rowId}`).value   = p.id;
       document.getElementById(`name-${rowId}`).value  = p.name;
       document.getElementById(`price-${rowId}`).value = parseFloat(p.price).toFixed(2);
-      document.getElementById(`desc-${rowId}`).value  = p.description || '';
       updateSubtotal(rowId);
     }
   } else {
     document.getElementById(`pid-${rowId}`).value = '';
     if (id === 'custom') {
-      ['name','price','desc'].forEach(f => { document.getElementById(`${f}-${rowId}`).value = ''; });
+      ['name','price'].forEach(f => { document.getElementById(`${f}-${rowId}`).value = ''; });
       document.getElementById(`name-${rowId}`).focus();
     }
   }
@@ -89,7 +88,7 @@ function buildRowHTML(rowId) {
       <div class="col-lg-3 col-md-6">
         <label class="form-label">Désignation <span class="text-danger">*</span></label>
         <input type="text" class="form-control form-control-sm" name="item_name[]" id="name-${rowId}" placeholder="Nom du produit / service" required>
-        <input type="text" class="form-control form-control-sm mt-1" name="item_description[]" id="desc-${rowId}" placeholder="Description (optionnel)">
+        <input type="hidden" name="item_description[]" id="desc-${rowId}" value="">
       </div>
       <div class="col-lg-2 col-md-4">
         <label class="form-label">Prix U. <span class="text-danger">*</span></label>
@@ -138,7 +137,6 @@ function _createRow(rowId, data) {
     document.getElementById(`name-${rowId}`).value  = data.product_name || '';
     document.getElementById(`price-${rowId}`).value = parseFloat(data.unit_price || 0).toFixed(2);
     document.getElementById(`qty-${rowId}`).value   = data.quantity     || 1;
-    document.getElementById(`desc-${rowId}`).value  = data.description  || '';
     updateSubtotal(rowId);
   }
 }

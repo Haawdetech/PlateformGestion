@@ -16,53 +16,53 @@
 <form method="POST" onsubmit="return validateForm()">
   <div class="row g-4">
 
-    <!-- ═══ Colonne gauche ═══ -->
-    <div class="col-lg-4">
+    <!-- ═══ Colonne gauche (client) ═══ -->
+    <div class="col-lg-3">
 
       <!-- Informations client -->
-      <div class="card mb-4">
-        <div class="card-header">
-          <i class="bi bi-person-fill me-2"></i>Informations client
+      <div class="card mb-3">
+        <div class="card-header py-2">
+          <i class="bi bi-person-fill me-1"></i>Client
           <span class="text-muted fw-normal small ms-1">(optionnel)</span>
         </div>
-        <div class="card-body p-4">
-          <div class="mb-3">
-            <label class="form-label" for="client_name">Nom / Raison sociale</label>
-            <input type="text" class="form-control" id="client_name" name="client_name"
-                   placeholder="Ex : Ahmed Benali, SARL XYZ...">
+        <div class="card-body p-3">
+          <div class="mb-2">
+            <label class="form-label mb-1 small fw-semibold" for="client_name">Nom / Raison sociale</label>
+            <input type="text" class="form-control form-control-sm" id="client_name" name="client_name"
+                   placeholder="Nom ou société...">
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="client_phone">Téléphone</label>
-            <input type="tel" class="form-control" id="client_phone" name="client_phone"
-                   placeholder="+212 6XX-XXXXXX">
+          <div class="mb-2">
+            <label class="form-label mb-1 small fw-semibold" for="client_phone">Téléphone</label>
+            <input type="tel" class="form-control form-control-sm" id="client_phone" name="client_phone"
+                   placeholder="+221 XX XXX XXXX">
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="client_email">Email</label>
-            <input type="email" class="form-control" id="client_email" name="client_email"
+          <div class="mb-2">
+            <label class="form-label mb-1 small fw-semibold" for="client_email">Email</label>
+            <input type="email" class="form-control form-control-sm" id="client_email" name="client_email"
                    placeholder="client@email.com">
           </div>
           <div class="mb-0">
-            <label class="form-label" for="client_address">Adresse</label>
-            <textarea class="form-control" id="client_address" name="client_address"
-                      rows="3" placeholder="Adresse complète..."></textarea>
+            <label class="form-label mb-1 small fw-semibold" for="client_address">Adresse</label>
+            <textarea class="form-control form-control-sm" id="client_address" name="client_address"
+                      rows="2" placeholder="Adresse..."></textarea>
           </div>
         </div>
       </div>
 
       <!-- Notes -->
       <div class="card">
-        <div class="card-header">
-          <i class="bi bi-sticky-fill me-2"></i>Notes / Remarques
+        <div class="card-header py-2">
+          <i class="bi bi-sticky-fill me-1"></i>Notes
         </div>
-        <div class="card-body p-4">
-          <textarea class="form-control" name="notes" rows="4"
-                    placeholder="Conditions de paiement, délai de livraison, observations..."></textarea>
+        <div class="card-body p-3">
+          <textarea class="form-control form-control-sm" name="notes" rows="3"
+                    placeholder="Conditions paiement, observations..."></textarea>
         </div>
       </div>
     </div>
 
-    <!-- ═══ Colonne droite ═══ -->
-    <div class="col-lg-8">
+    <!-- ═══ Colonne droite (articles) ═══ -->
+    <div class="col-lg-9">
 
       <!-- Articles -->
       <div class="card mb-4">
