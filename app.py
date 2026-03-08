@@ -35,7 +35,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '1.3'
+APP_VERSION = '1.4'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -94,7 +94,22 @@ def init_db():
             key   TEXT PRIMARY KEY,
             value TEXT
         );
+        CREATE TABLE IF NOT EXISTS payments (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            invoice_id INTEGER NOT NULL,
+            amount     REAL    NOT NULL,
+            note       TEXT,
+            paid_at    TEXT    DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (invoice_id) REFERENCES invoices(id)
+        );
     ''')
+
+    # Migration : ajouter payment_status si colonne absente
+    try:
+        conn.execute("ALTER TABLE invoices ADD COLUMN payment_status TEXT DEFAULT 'non_paye'")
+        conn.commit()
+    except Exception:
+        pass
 
     defaults = [
         ('shop_name',    'Mon Entreprise'),
@@ -257,7 +272,85 @@ def fmt_price(value):
 @app.route('/')
 @login_required
 def index():
-    return redirect(url_for('products'))
+    return redirect(url_for('dashboard'))
+
+
+# ══════════════════════════ DASHBOARD ═══════════════════════════════
+
+@app.route('/tableau-de-bord')
+@login_required
+def dashboard():
+    conn = get_db()
+
+    # ── Ventes du jour ──
+    day = conn.execute("""
+        SELECT COALESCE(SUM(total),0) AS amt, COUNT(*) AS cnt
+        FROM invoices WHERE date(created_at)=date('now','localtime')
+    """).fetchone()
+
+    # ── Ventes de la semaine (lun→dim) ──
+    week = conn.execute("""
+        SELECT COALESCE(SUM(total),0) AS amt, COUNT(*) AS cnt
+        FROM invoices
+        WHERE date(created_at) >= date('now','localtime','weekday 1','-7 days')
+    """).fetchone()
+
+    # ── Ventes du mois ──
+    month = conn.execute("""
+        SELECT COALESCE(SUM(total),0) AS amt, COUNT(*) AS cnt
+        FROM invoices
+        WHERE strftime('%Y-%m',created_at)=strftime('%Y-%m','now','localtime')
+    """).fetchone()
+
+    # ── Factures non payées ──
+    unpaid = conn.execute("""
+        SELECT COUNT(*) AS cnt, COALESCE(SUM(total),0) AS amt
+        FROM invoices WHERE payment_status IN ('non_paye','partiel')
+    """).fetchone()
+
+    # ── Graphique : ventes des 30 derniers jours ──
+    chart_rows = conn.execute("""
+        SELECT date(created_at) AS d, SUM(total) AS amt
+        FROM invoices
+        WHERE date(created_at) >= date('now','localtime','-29 days')
+        GROUP BY d ORDER BY d
+    """).fetchall()
+
+    # ── Top 5 produits ──
+    top_products = conn.execute("""
+        SELECT ii.product_name,
+               SUM(ii.quantity) AS total_qty,
+               SUM(ii.subtotal) AS total_amt
+        FROM invoice_items ii
+        JOIN invoices inv ON inv.id = ii.invoice_id
+        WHERE strftime('%Y-%m',inv.created_at)=strftime('%Y-%m','now','localtime')
+        GROUP BY ii.product_name
+        ORDER BY total_amt DESC LIMIT 5
+    """).fetchall()
+
+    # ── Dernières factures ──
+    recent = conn.execute("""
+        SELECT * FROM invoices ORDER BY created_at DESC LIMIT 8
+    """).fetchall()
+
+    conn.close()
+
+    # Préparer données du graphique
+    from datetime import timedelta, date as date_type
+    today = datetime.now().date()
+    chart_map = {row['d']: row['amt'] for row in chart_rows}
+    chart_labels = []
+    chart_data   = []
+    for i in range(29, -1, -1):
+        d = (today - timedelta(days=i)).strftime('%Y-%m-%d')
+        chart_labels.append((today - timedelta(days=i)).strftime('%d/%m'))
+        chart_data.append(round(chart_map.get(d, 0), 2))
+
+    return render_template('dashboard.html',
+        day=day, week=week, month=month, unpaid=unpaid,
+        chart_labels=chart_labels, chart_data=chart_data,
+        top_products=top_products, recent=recent
+    )
 
 
 # ══════════════════════════ AUTH ROUTES ═════════════════════════════
@@ -686,11 +779,76 @@ def invoice_detail(iid):
         flash('Facture introuvable.', 'danger')
         conn.close()
         return redirect(url_for('invoices'))
-    items = conn.execute(
-        'SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id', (iid,)
-    ).fetchall()
+    items    = conn.execute('SELECT * FROM invoice_items WHERE invoice_id=? ORDER BY id', (iid,)).fetchall()
+    payments = conn.execute('SELECT * FROM payments WHERE invoice_id=? ORDER BY paid_at', (iid,)).fetchall()
+    paid_amt = sum(p['amount'] for p in payments)
     conn.close()
-    return render_template('invoice_detail.html', invoice=invoice, items=items)
+    return render_template('invoice_detail.html', invoice=invoice,
+                           items=items, payments=payments, paid_amt=paid_amt,
+                           remaining=round(invoice['total'] - paid_amt, 2))
+
+
+@app.route('/factures/<int:iid>/paiement', methods=['POST'])
+@login_required
+def add_payment(iid):
+    conn    = get_db()
+    invoice = conn.execute('SELECT * FROM invoices WHERE id=?', (iid,)).fetchone()
+    if not invoice:
+        conn.close()
+        flash('Facture introuvable.', 'danger')
+        return redirect(url_for('invoices'))
+
+    try:
+        amount = round(float(request.form.get('amount','0').replace(',','.')), 2)
+    except ValueError:
+        amount = 0
+
+    if amount <= 0:
+        flash('Montant invalide.', 'danger')
+        conn.close()
+        return redirect(url_for('invoice_detail', iid=iid))
+
+    note = request.form.get('note','').strip() or None
+    conn.execute('INSERT INTO payments (invoice_id, amount, note) VALUES (?,?,?)', (iid, amount, note))
+
+    # Recalcul statut
+    paid_total = conn.execute(
+        'SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE invoice_id=?', (iid,)
+    ).fetchone()['s'] + amount
+    if paid_total >= invoice['total']:
+        status = 'paye'
+    elif paid_total > 0:
+        status = 'partiel'
+    else:
+        status = 'non_paye'
+    conn.execute('UPDATE invoices SET payment_status=? WHERE id=?', (status, iid))
+    conn.commit()
+    conn.close()
+    flash(f'Versement de {amount:,.0f} enregistré !', 'success')
+    return redirect(url_for('invoice_detail', iid=iid))
+
+
+@app.route('/factures/<int:iid>/paiement/<int:pid>/supprimer', methods=['POST'])
+@login_required
+def delete_payment(iid, pid):
+    conn = get_db()
+    conn.execute('DELETE FROM payments WHERE id=? AND invoice_id=?', (pid, iid))
+    # Recalcul statut
+    invoice  = conn.execute('SELECT * FROM invoices WHERE id=?', (iid,)).fetchone()
+    paid_total = conn.execute(
+        'SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE invoice_id=?', (iid,)
+    ).fetchone()['s']
+    if paid_total >= invoice['total']:
+        status = 'paye'
+    elif paid_total > 0:
+        status = 'partiel'
+    else:
+        status = 'non_paye'
+    conn.execute('UPDATE invoices SET payment_status=? WHERE id=?', (status, iid))
+    conn.commit()
+    conn.close()
+    flash('Versement supprimé.', 'warning')
+    return redirect(url_for('invoice_detail', iid=iid))
 
 
 @app.route('/factures/<int:iid>/imprimer')
@@ -701,11 +859,12 @@ def print_invoice(iid):
     if not invoice:
         conn.close()
         return 'Facture introuvable', 404
-    items = conn.execute(
-        'SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id', (iid,)
-    ).fetchall()
+    items    = conn.execute('SELECT * FROM invoice_items WHERE invoice_id=? ORDER BY id', (iid,)).fetchall()
+    payments = conn.execute('SELECT * FROM payments WHERE invoice_id=? ORDER BY paid_at', (iid,)).fetchall()
+    paid_amt = sum(p['amount'] for p in payments)
     conn.close()
-    return render_template('invoice_print.html', invoice=invoice, items=items)
+    return render_template('invoice_print.html', invoice=invoice, items=items,
+                           paid_amt=paid_amt, remaining=round(invoice['total'] - paid_amt, 2))
 
 
 @app.route('/factures/<int:iid>/supprimer', methods=['POST'])
@@ -714,6 +873,7 @@ def delete_invoice(iid):
     conn    = get_db()
     invoice = conn.execute('SELECT invoice_number FROM invoices WHERE id = ?', (iid,)).fetchone()
     if invoice:
+        conn.execute('DELETE FROM payments WHERE invoice_id = ?', (iid,))
         conn.execute('DELETE FROM invoice_items WHERE invoice_id = ?', (iid,))
         conn.execute('DELETE FROM invoices WHERE id = ?', (iid,))
         conn.commit()

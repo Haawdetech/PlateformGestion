@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-speedometer2 me-2 text-primary"></i>Tableau de bord</h1>
+    <p class="page-subtitle">Vue d'ensemble de votre activité</p>
+  </div>
+  <a href="{{ url_for('create_invoice') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Nouvelle Facture
+  </a>
+</div>
+
+<!-- ═══ STATS CARDS ═══ -->
+<div class="row g-3 mb-4">
+
+  <!-- Aujourd'hui -->
+  <div class="col-6 col-lg-3">
+    <div class="stat-card blue">
+      <span class="stat-icon">📅</span>
+      <div>
+        <div class="stat-number">{{ day.amt | fmt_price }}</div>
+        <div class="stat-label">Aujourd'hui ({{ day.cnt }} facture{{ 's' if day.cnt > 1 else '' }})</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cette semaine -->
+  <div class="col-6 col-lg-3">
+    <div class="stat-card green">
+      <span class="stat-icon">📆</span>
+      <div>
+        <div class="stat-number">{{ week.amt | fmt_price }}</div>
+        <div class="stat-label">Cette semaine ({{ week.cnt }})</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ce mois -->
+  <div class="col-6 col-lg-3">
+    <div class="stat-card" style="background:linear-gradient(135deg,#6f42c1,#8e6fd8);color:#fff;">
+      <span class="stat-icon">🗓️</span>
+      <div>
+        <div class="stat-number">{{ month.amt | fmt_price }}</div>
+        <div class="stat-label">Ce mois ({{ month.cnt }})</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Impayées -->
+  <div class="col-6 col-lg-3">
+    <div class="stat-card" style="background:linear-gradient(135deg,#dc3545,#e8697a);color:#fff;">
+      <span class="stat-icon">⚠️</span>
+      <div>
+        <div class="stat-number">{{ unpaid.cnt }}</div>
+        <div class="stat-label">Factures impayées</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ GRAPHIQUE + TOP PRODUITS ═══ -->
+<div class="row g-4 mb-4">
+
+  <!-- Graphique 30 jours -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-graph-up me-2"></i>Ventes des 30 derniers jours
+      </div>
+      <div class="card-body p-3">
+        <canvas id="salesChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top produits du mois -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-trophy-fill me-2 text-warning"></i>Top produits (ce mois)
+      </div>
+      <div class="card-body p-0">
+        {% if top_products %}
+        <ul class="list-group list-group-flush">
+          {% for p in top_products %}
+          <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+            <div>
+              <div class="fw-semibold small">{{ p.product_name }}</div>
+              <div class="text-muted" style="font-size:0.78rem;">{{ p.total_qty }} unités vendues</div>
+            </div>
+            <span class="badge bg-success rounded-pill">{{ p.total_amt | fmt_price }} {{ currency }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-4 text-muted small">Aucune vente ce mois</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ DERNIÈRES FACTURES ═══ -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-receipt-cutoff me-2"></i>Dernières factures</span>
+    <a href="{{ url_for('invoices') }}" class="btn btn-sm btn-outline-primary">Voir tout</a>
+  </div>
+  {% if recent %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>N° Facture</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th class="text-end">Total</th>
+          <th class="text-center">Statut</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in recent %}
+        <tr>
+          <td>
+            <a href="{{ url_for('invoice_detail', iid=inv.id) }}" class="fw-bold text-primary text-decoration-none">
+              {{ inv.invoice_number }}
+            </a>
+          </td>
+          <td>{{ inv.client_name or '—' }}</td>
+          <td class="text-muted small">{{ inv.created_at | fmt_date }}</td>
+          <td class="text-end fw-bold">{{ inv.total | fmt_price }} {{ currency }}</td>
+          <td class="text-center">
+            {% if inv.payment_status == 'paye' %}
+              <span class="badge bg-success">Payé</span>
+            {% elif inv.payment_status == 'partiel' %}
+              <span class="badge bg-warning text-dark">Partiel</span>
+            {% else %}
+              <span class="badge bg-danger">Non payé</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <a href="{{ url_for('invoice_detail', iid=inv.id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye-fill"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">🧾</span>
+    <p class="text-muted">Aucune facture encore créée.</p>
+    <a href="{{ url_for('create_invoice') }}" class="btn btn-primary">Créer une facture</a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+const labels = {{ chart_labels | tojson }};
+const data   = {{ chart_data | tojson }};
+
+new Chart(document.getElementById('salesChart'), {
+  type: 'line',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'Ventes ({{ currency }})',
+      data: data,
+      borderColor: '#0d6efd',
+      backgroundColor: 'rgba(13,110,253,0.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      fill: true,
+      tension: 0.3
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } }
+    }
+  }
+});
+</script>
+{% endblock %}

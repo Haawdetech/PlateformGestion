@@ -6,171 +6,177 @@
   <title>Facture {{ invoice.invoice_number }} — {{ settings.shop_name }}</title>
   <style>
     /* ══════════════════════════════════════════════
-       INVOICE PRINT TEMPLATE
-       Designed for A4 print and PDF export
+       INVOICE PRINT — Style ALIMENTATION KHEWAL
+       Black & white, minimal, table-bordered
     ══════════════════════════════════════════════ */
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-      font-size: 13px;
-      color: #1a1a1a;
-      background: #edf2f7;
-    }
-
-    /* ── Wrapper ── */
-    .invoice-wrapper {
-      max-width: 800px;
-      margin: 30px auto;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #000;
       background: #fff;
-      padding: 48px 52px;
-      box-shadow: 0 4px 30px rgba(0,0,0,.12);
-      border-radius: 4px;
     }
 
-    /* ── Header ── */
-    .inv-header {
+    /* ── Page wrapper ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 14mm 16mm 14mm 16mm;
+      background: #fff;
+    }
+
+    /* ══ HEADER ══
+       Two-column layout: left = shop info, right = date/ref/client */
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 36px;
-      padding-bottom: 24px;
-      border-bottom: 3px solid #3b5bdb;
-    }
-
-    .company-name {
-      font-size: 22px;
-      font-weight: 800;
-      color: #3b5bdb;
-      margin-bottom: 6px;
-    }
-
-    .company-details {
-      color: #555;
-      font-size: 12.5px;
-      line-height: 1.7;
-    }
-
-    .inv-meta { text-align: right; }
-
-    .inv-title {
-      font-size: 36px;
-      font-weight: 800;
-      color: #1a1a2e;
-      letter-spacing: -1.5px;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .inv-number {
-      font-size: 14px;
-      font-weight: 700;
-      color: #3b5bdb;
-      margin-bottom: 4px;
-    }
-
-    .inv-date {
-      font-size: 12.5px;
-      color: #777;
-    }
-
-    /* ── Client section ── */
-    .client-section {
-      display: flex;
-      gap: 40px;
-      margin-bottom: 36px;
-    }
-
-    .client-block { flex: 1; }
-
-    .section-label {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #aaa;
       margin-bottom: 10px;
     }
 
-    .client-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-    .client-info { color: #555; font-size: 12.5px; line-height: 1.7; }
+    .header-left { flex: 0 0 55%; }
+    .header-right { flex: 0 0 42%; text-align: left; }
 
-    /* ── Items table ── */
+    .shop-name {
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .shop-tagline,
+    .shop-address,
+    .shop-phone {
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    .header-right .label {
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    .header-right .ref-num {
+      font-size: 10.5px;
+      font-weight: normal;
+      margin-top: 4px;
+    }
+
+    .header-right .client-name-ref {
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    /* ══ CHERIF-style sub-header (client display name large) ══ */
+    .client-display {
+      font-size: 19px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 10px 0 6px 0;
+    }
+
+    /* ══ Invoice number line ══ */
+    .invoice-number-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .invoice-number-line .fact-label {
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .invoice-number-line .original-label {
+      font-size: 10.5px;
+      font-weight: normal;
+    }
+
+    /* ══ ITEMS TABLE ══ */
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 24px;
+      margin-bottom: 0;
     }
 
-    .items-table thead tr {
-      background: #1a1a2e;
-      color: #fff;
+    .items-table th,
+    .items-table td {
+      border: 1px solid #000;
+      padding: 3px 6px;
+      font-size: 10.5px;
+      line-height: 1.45;
     }
 
+    /* Header row */
     .items-table thead th {
-      padding: 11px 14px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .6px;
+      font-weight: normal;
+      text-align: left;
+      background: #fff;
     }
 
-    .items-table tbody tr { border-bottom: 1px solid #f0f0f0; }
-    .items-table tbody tr:last-child { border-bottom: 2px solid #e0e0e0; }
+    .items-table thead th.col-qte      { width: 7%;  text-align: center; }
+    .items-table thead th.col-desc     { width: 51%; }
+    .items-table thead th.col-pu       { width: 21%; text-align: right; }
+    .items-table thead th.col-ttc      { width: 21%; text-align: right; }
 
-    .items-table tbody td {
-      padding: 11px 14px;
-      vertical-align: top;
+    /* Body rows */
+    .items-table tbody td.col-qte      { text-align: center; }
+    .items-table tbody td.col-desc     { text-align: left; }
+    .items-table tbody td.col-pu       { text-align: right; }
+    .items-table tbody td.col-ttc      { text-align: right; }
+
+    /* Empty spacer row at the bottom of items */
+    .spacer-row td { border-left: 1px solid #000; border-right: 1px solid #000; border-top: none; border-bottom: none; height: 6px; }
+
+    /* ══ FOOTER TABLE (totals + signatures) ══ */
+    .footer-table {
+      width: 100%;
+      border-collapse: collapse;
     }
 
-    .items-table tbody tr:nth-child(even) { background: #f9fafb; }
-
-    .prod-name { font-weight: 600; }
-    .prod-desc { font-size: 11.5px; color: #888; margin-top: 2px; }
-
-    .text-right  { text-align: right; }
-    .text-center { text-align: center; }
-
-    /* ── Totals ── */
-    .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 32px; }
-
-    .totals-table { width: 280px; border-collapse: collapse; }
-
-    .totals-table td { padding: 7px 12px; }
-
-    .total-row-final { background: #1a1a2e; color: #fff; }
-    .total-row-final td {
-      font-size: 15px;
-      font-weight: 800;
-      padding: 13px 14px;
-    }
-
-    /* ── Notes ── */
-    .notes-block {
-      background: #f8f9fa;
-      border-left: 4px solid #3b5bdb;
-      padding: 12px 16px;
-      border-radius: 0 4px 4px 0;
-      font-size: 12.5px;
-      color: #555;
-      margin-bottom: 30px;
-    }
-
-    /* ── Footer ── */
-    .inv-footer {
+    .footer-table td {
+      border: 1px solid #000;
+      font-size: 10.5px;
+      padding: 3px 8px;
       text-align: center;
-      font-size: 11.5px;
-      color: #aaa;
-      padding-top: 20px;
-      border-top: 1px dashed #ddd;
     }
+
+    .footer-table .label-row td {
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #fff;
+    }
+
+    .footer-table .value-row td {
+      font-weight: normal;
+      background: #fff;
+    }
+
+    .footer-table .sig-row td {
+      font-weight: bold;
+      text-transform: uppercase;
+      height: 24px;
+      background: #fff;
+    }
+
+    /* Column widths in footer */
+    .footer-table .col-total  { width: 33%; }
+    .footer-table .col-acompte { width: 33%; }
+    .footer-table .col-net    { width: 34%; }
 
     /* ── Print controls (screen only) ── */
     .print-controls {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 20px;
+      right: 20px;
       display: flex;
       gap: 10px;
       z-index: 100;
@@ -180,138 +186,147 @@
       background: #6c757d;
       color: #fff;
       border: none;
-      padding: 12px 22px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       text-decoration: none;
       display: inline-block;
     }
 
     .btn-do-print {
-      background: #3b5bdb;
+      background: #1a1a2e;
       color: #fff;
       border: none;
-      padding: 12px 22px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      box-shadow: 0 4px 15px rgba(59,91,219,.4);
     }
 
-    .btn-do-print:hover { background: #2f4ac0; }
+    .btn-do-print:hover { background: #333; }
 
     /* ── Print media ── */
     @media print {
       html, body { background: #fff !important; }
-      .invoice-wrapper {
+      .page {
         margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        max-width: 100% !important;
+        padding: 10mm 12mm !important;
+        width: 100% !important;
+        min-height: unset !important;
       }
       .print-controls { display: none !important; }
-      @page { margin: 1.5cm 1.5cm; size: A4; }
+      @page { margin: 0; size: A4; }
     }
   </style>
 </head>
 <body>
 
-<div class="invoice-wrapper">
+<div class="page">
 
-  <!-- ══ Header ══ -->
-  <div class="inv-header">
-    <div>
-      <div class="company-name">{{ settings.shop_name }}</div>
-      <div class="company-details">
-        {% if settings.shop_address %}{{ settings.shop_address }}<br>{% endif %}
-        {% if settings.shop_phone %}📞 {{ settings.shop_phone }}<br>{% endif %}
-        {% if settings.shop_email %}✉ {{ settings.shop_email }}<br>{% endif %}
-        {% if settings.shop_ice %}ICE : {{ settings.shop_ice }}{% endif %}
-      </div>
+  <!-- ══ HEADER: 2 colonnes ══ -->
+  <div class="header">
+    <!-- Gauche: infos boutique -->
+    <div class="header-left">
+      <div class="shop-name">{{ settings.shop_name }}</div>
+      {% if settings.shop_tagline %}
+      <div class="shop-tagline">{{ settings.shop_tagline }}</div>
+      {% else %}
+      <div class="shop-tagline">Vente en Gros &ndash; Demi gros &ndash; Details</div>
+      {% endif %}
+      {% if settings.shop_address %}
+      <div class="shop-address">{{ settings.shop_address }}</div>
+      {% endif %}
+      {% if settings.shop_phone %}
+      <div class="shop-phone">Tel: {{ settings.shop_phone }}</div>
+      {% endif %}
     </div>
-    <div class="inv-meta">
-      <div class="inv-title">FACTURE</div>
-      <div class="inv-number">N° {{ invoice.invoice_number }}</div>
-      <div class="inv-date">Date : {{ invoice.created_at | fmt_date_short }}</div>
+
+    <!-- Droite: date, ref, client -->
+    <div class="header-right">
+      <div class="label">Date {{ invoice.created_at | fmt_date_short }}</div>
+      <div class="label">Ref</div>
+      <div class="label">{{ invoice.created_at | fmt_date }}</div>
+      <br>
+      {% if invoice.client_phone %}
+      <div class="ref-num">{{ invoice.client_phone }}</div>
+      {% endif %}
+      <div class="client-name-ref">
+        {{ invoice.client_name or '' }}
+        {% if invoice.client_address %}{{ invoice.client_address }}{% endif %}
+      </div>
     </div>
   </div>
 
-  <!-- ══ Client ══ -->
-  <div class="client-section">
-    <div class="client-block">
-      <div class="section-label">Facturer à</div>
-      <div class="client-name">{{ invoice.client_name or 'Client' }}</div>
-      <div class="client-info">
-        {% if invoice.client_address %}{{ invoice.client_address }}<br>{% endif %}
-        {% if invoice.client_phone %}📞 {{ invoice.client_phone }}<br>{% endif %}
-        {% if invoice.client_email %}✉ {{ invoice.client_email }}{% endif %}
-      </div>
-    </div>
+  <!-- ══ Grand nom client (style CHERIF) ══ -->
+  {% if invoice.client_name %}
+  <div class="client-display">{{ invoice.client_name | upper }}</div>
+  {% endif %}
+
+  <!-- ══ Numéro de facture ══ -->
+  <div class="invoice-number-line">
+    <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
+    <span class="original-label">Original</span>
   </div>
 
-  <!-- ══ Articles ══ -->
+  <!-- ══ TABLE ARTICLES ══ -->
   <table class="items-table">
     <thead>
       <tr>
-        <th style="width:36px">#</th>
-        <th>Désignation</th>
-        <th class="text-center" style="width:60px">Qté</th>
-        <th class="text-right" style="width:110px">Prix U.</th>
-        <th class="text-right" style="width:120px">Total</th>
+        <th class="col-qte">QTE</th>
+        <th class="col-desc"></th>
+        <th class="col-pu">Prix unitaire</th>
+        <th class="col-ttc">Montant TTC</th>
       </tr>
     </thead>
     <tbody>
       {% for item in items %}
       <tr>
-        <td class="text-center" style="color:#999;">{{ loop.index }}</td>
-        <td>
-          <div class="prod-name">{{ item.product_name }}</div>
-          {% if item.description %}
-            <div class="prod-desc">{{ item.description }}</div>
-          {% endif %}
-        </td>
-        <td class="text-center">{{ item.quantity }}</td>
-        <td class="text-right">{{ item.unit_price | fmt_price }} {{ currency }}</td>
-        <td class="text-right"><strong>{{ item.subtotal | fmt_price }} {{ currency }}</strong></td>
+        <td class="col-qte">{{ item.quantity }}</td>
+        <td class="col-desc">{{ item.product_name }}</td>
+        <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
+        <td class="col-ttc">{{ item.subtotal | fmt_price }}</td>
       </tr>
       {% endfor %}
+      <!-- Ligne vide séparatrice -->
+      <tr class="spacer-row">
+        <td colspan="4" style="border:none; border-left:1px solid #000; border-right:1px solid #000; height:8px;"></td>
+      </tr>
     </tbody>
   </table>
 
-  <!-- ══ Total ══ -->
-  <div class="totals-wrap">
-    <table class="totals-table">
-      <tr class="total-row-final">
-        <td>TOTAL TTC</td>
-        <td class="text-right">{{ invoice.total | fmt_price }} {{ currency }}</td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- ══ Notes ══ -->
-  {% if invoice.notes %}
-  <div class="notes-block">
-    <strong>Notes :</strong> {{ invoice.notes }}
-  </div>
-  {% endif %}
-
-  <!-- ══ Footer ══ -->
-  <div class="inv-footer">
-    Merci de votre confiance &mdash; {{ settings.shop_name }}
-  </div>
+  <!-- ══ FOOTER TABLE: totaux + signatures ══ -->
+  <table class="footer-table">
+    <!-- Ligne labels -->
+    <tr class="label-row">
+      <td class="col-total">TOTAL</td>
+      <td class="col-acompte">ACOMPTE</td>
+      <td class="col-net">NET A PAYER</td>
+    </tr>
+    <!-- Ligne valeurs -->
+    <tr class="value-row">
+      <td class="col-total">{{ invoice.total | fmt_price }}</td>
+      <td class="col-acompte">{{ paid_amt | fmt_price }}</td>
+      <td class="col-net">{{ remaining | fmt_price }}</td>
+    </tr>
+    <!-- Ligne signatures -->
+    <tr class="sig-row">
+      <td colspan="2">CAISSIER</td>
+      <td>LIVRAISON</td>
+    </tr>
+  </table>
 
 </div>
 
-<!-- ══ Boutons impression (écran seulement) ══ -->
+<!-- ══ Boutons (écran seulement) ══ -->
 <div class="print-controls">
   <a href="{{ url_for('invoice_detail', iid=invoice.id) }}" class="btn-back">
-    ← Retour
+    &larr; Retour
   </a>
   <button class="btn-do-print" onclick="window.print()">
-    🖨️ Imprimer / Enregistrer PDF
+    Imprimer / PDF
   </button>
 </div>
 

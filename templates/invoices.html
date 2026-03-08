@@ -55,6 +55,7 @@
           <th>Date</th>
           <th>Articles</th>
           <th class="text-end">Total</th>
+          <th class="text-center">Statut</th>
           <th class="text-center">Actions</th>
         </tr>
       </thead>
@@ -84,6 +85,15 @@
           </td>
           <td class="text-end fw-bold text-success fs-6">
             {{ inv.total | fmt_price }} {{ currency }}
+          </td>
+          <td class="text-center">
+            {% if inv.payment_status == 'paye' %}
+              <span class="badge bg-success">Payé</span>
+            {% elif inv.payment_status == 'partiel' %}
+              <span class="badge bg-warning text-dark">Partiel</span>
+            {% else %}
+              <span class="badge bg-danger">Non payé</span>
+            {% endif %}
           </td>
           <td class="text-center">
             <a href="{{ url_for('invoice_detail', iid=inv.id) }}"
