@@ -18,7 +18,7 @@
     <!-- En-tête / Logo -->
     <div class="sidebar-header">
       <div class="sidebar-logo-wrap">
-        <span class="sidebar-emoji">🏪</span>
+        <i class="bi bi-shop-window sidebar-logo-icon"></i>
       </div>
       <div class="sidebar-brand-text">
         <div class="sidebar-shop-name">{{ settings.shop_name }}</div>
@@ -213,11 +213,11 @@
 
       // Afficher un compteur pendant le téléchargement (peut durer 30-90s)
       let secs = 0;
-      const dots = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+      const dots = ['.  ', '.. ', '...', ' ..', '  .'];
       const timer = setInterval(() => {
         secs++;
         const d = dots[secs % dots.length];
-        btn.innerHTML = d + ' Téléchargement… ' + secs + 's';
+        btn.innerHTML = '<i class="bi bi-arrow-down-circle me-1"></i> Téléchargement' + d + ' ' + secs + 's';
         if (secs < 30) {
           msg.textContent = 'Téléchargement de la mise à jour, veuillez patienter…';
         } else {

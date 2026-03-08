@@ -29,6 +29,7 @@ from PySide6.QtGui import QPixmap, QPainter, QColor, QFont, QBrush, QPen
 # ── Import modules locaux ─────────────────────
 from flask_thread import FlaskThread
 from app_window import MainWindow
+from app import APP_VERSION
 
 
 # ─────────────────────────────────────────────
@@ -51,24 +52,27 @@ def make_splash() -> QSplashScreen:
     painter.setPen(pen)
     painter.drawRoundedRect(4, 4, w - 8, h - 8, 12, 12)
 
-    # Icône boutique
+    # Icône boutique (rectangle stylisé — évite les problèmes d'emoji sur Windows)
     painter.setPen(Qt.PenStyle.NoPen)
-    font_icon = QFont("Arial", 52)
+    icon_x, icon_y, icon_s = w // 2 - 32, 38, 64
+    painter.setBrush(QBrush(QColor("#3b5bdb")))
+    painter.drawRoundedRect(icon_x, icon_y, icon_s, icon_s, 14, 14)
+    font_icon = QFont("Segoe UI", 28, QFont.Weight.Bold)
     painter.setFont(font_icon)
     painter.setPen(QColor("#ffffff"))
-    painter.drawText(0, 30, w, 90, Qt.AlignmentFlag.AlignCenter, "🏪")
+    painter.drawText(icon_x, icon_y, icon_s, icon_s, Qt.AlignmentFlag.AlignCenter, "B")
 
     # Titre
-    font_title = QFont("Arial", 22, QFont.Weight.Bold)
+    font_title = QFont("Segoe UI", 22, QFont.Weight.Bold)
     painter.setFont(font_title)
     painter.setPen(QColor("#ffffff"))
     painter.drawText(0, 120, w, 40, Qt.AlignmentFlag.AlignCenter, "BoutikManager")
 
     # Sous-titre
-    font_sub = QFont("Arial", 11)
+    font_sub = QFont("Segoe UI", 11)
     painter.setFont(font_sub)
     painter.setPen(QColor("#a0a0c0"))
-    painter.drawText(0, 162, w, 25, Qt.AlignmentFlag.AlignCenter, "Gestion de boutique — v2.0")
+    painter.drawText(0, 162, w, 25, Qt.AlignmentFlag.AlignCenter, f"Gestion de boutique — v{APP_VERSION}")
 
     # Barre de chargement (fond)
     bar_x, bar_y, bar_w, bar_h = 60, 210, w - 120, 8
@@ -108,7 +112,7 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("BoutikManager")
     app.setApplicationDisplayName("BoutikManager")
-    app.setApplicationVersion("2.0")
+    app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName("BoutikManager")
 
     # Afficher le splash screen

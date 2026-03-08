@@ -28,6 +28,14 @@
   --shadow-md:      0 4px 20px rgba(0,0,0,.11);
 }
 
+/* ── Scrollbars globales (Windows / Chromium) ────────────────── */
+/* Sans cette règle, Windows affiche des scrollbars natives de 17px */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #c1c9d6; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #a0aab8; }
+::-webkit-scrollbar-corner   { background: transparent; }
+
 /* ── Reset & base ────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -59,11 +67,12 @@ body.app-body {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.1) transparent;
+  scrollbar-color: rgba(255,255,255,.15) transparent;
 }
 
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+/* Scrollbar sidebar sombre (surcharge la règle globale) */
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.3); }
 
 /* ── En-tête sidebar ── */
 .sidebar-header {
@@ -86,7 +95,8 @@ body.app-body {
   box-shadow: 0 4px 12px rgba(59,91,219,.4);
 }
 
-.sidebar-emoji { font-size: 1.4rem; line-height: 1; }
+.sidebar-emoji { font-size: 1.4rem; line-height: 1; }  /* rétrocompat */
+.sidebar-logo-icon { font-size: 1.35rem; color: #fff; line-height: 1; }
 
 .sidebar-brand-text { min-width: 0; }
 
@@ -381,12 +391,6 @@ body.app-body {
   padding: 1.5rem 1.75rem;
   scrollbar-width: thin;
   scrollbar-color: var(--gray-200) transparent;
-}
-
-.content-wrapper::-webkit-scrollbar { width: 6px; }
-.content-wrapper::-webkit-scrollbar-thumb {
-  background: var(--gray-200);
-  border-radius: 4px;
 }
 
 /* ── Footer ── */
