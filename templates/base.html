@@ -210,25 +210,40 @@
       const btn = document.getElementById('update-btn');
       const msg = document.getElementById('update-msg');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Téléchargement…';
-      msg.textContent = 'Téléchargement en cours, veuillez patienter…';
 
-      fetch('/api/auto-update')
+      // Afficher un compteur pendant le téléchargement (peut durer 30-90s)
+      let secs = 0;
+      const dots = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+      const timer = setInterval(() => {
+        secs++;
+        const d = dots[secs % dots.length];
+        btn.innerHTML = d + ' Téléchargement… ' + secs + 's';
+        if (secs < 30) {
+          msg.textContent = 'Téléchargement de la mise à jour, veuillez patienter…';
+        } else {
+          msg.textContent = 'Téléchargement en cours (fichier volumineux)…';
+        }
+      }, 1000);
+
+      fetch('/api/auto-update', { signal: AbortSignal.timeout(180000) })
         .then(r => r.json())
         .then(data => {
+          clearInterval(timer);
           if (data.success) {
             btn.className = 'sidebar-update-btn success';
-            btn.innerHTML = '✅ Installé ! Redémarrage…';
-            msg.textContent = 'L\'application va redémarrer automatiquement.';
+            btn.innerHTML = '✅ Mise à jour installée !';
+            msg.textContent = "L'application va redémarrer dans quelques secondes…";
+            // Attendre 6s (temps que le script shell remplace l'app)
+            // puis essayer de se reconnecter à la nouvelle version
             setTimeout(() => {
-              msg.textContent = '🔄 Reconnexion en cours…';
+              msg.textContent = '🔄 Reconnexion…';
               let tries = 0;
               const retry = setInterval(() => {
                 tries++;
                 fetch('/').then(() => { clearInterval(retry); location.reload(); })
-                          .catch(() => { if (tries > 20) clearInterval(retry); });
+                          .catch(() => { if (tries > 30) clearInterval(retry); });
               }, 1500);
-            }, 2000);
+            }, 6000);
           } else {
             btn.disabled = false;
             btn.className = 'sidebar-update-btn danger';
@@ -237,8 +252,11 @@
           }
         })
         .catch(() => {
+          clearInterval(timer);
           btn.disabled = false;
-          btn.innerHTML = '❌ Erreur réseau';
+          btn.className = 'sidebar-update-btn danger';
+          btn.innerHTML = '❌ Erreur — Réessayer';
+          msg.textContent = 'Erreur réseau ou délai dépassé.';
         });
     }
   </script>

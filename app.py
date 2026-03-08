@@ -999,28 +999,50 @@ def auto_update():
             z.extractall(tmp_dir)
         os.remove(zip_path)
 
-        # ── 4a. Windows : remplacer l'exe ────────────────────────────────
+        # ── 4a. Windows : remplacer le DOSSIER entier ───────────────────
         if is_windows:
-            new_exe = None
-            for root, _dirs, files in os.walk(tmp_dir):
-                for f in files:
-                    if f.lower().endswith('.exe'):
-                        new_exe = os.path.join(root, f)
-                        break
-                if new_exe:
-                    break
-            if not new_exe:
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-                return jsonify({'error': 'Aucun .exe trouvé dans le ZIP.'}), 500
-
+            # Le ZIP contient : BoutikManager/ (dossier avec exe + toutes DLLs)
+            # sys.executable = C:\...\BoutikManager\BoutikManager.exe
+            # → il faut remplacer tout le dossier, pas juste le .exe !
             current_exe = sys.executable
+            current_dir = os.path.dirname(current_exe)   # C:\...\BoutikManager
+            parent_dir  = os.path.dirname(current_dir)   # C:\...
+
+            # Trouver le nouveau dossier extrait dans tmp_dir
+            new_dir = None
+            for item in os.listdir(tmp_dir):
+                item_path = os.path.join(tmp_dir, item)
+                if os.path.isdir(item_path) and not item.startswith('.'):
+                    new_dir = item_path
+                    break
+
+            # Fallback : prendre le dossier parent du premier .exe trouvé
+            if not new_dir:
+                for root, _dirs, files in os.walk(tmp_dir):
+                    for f in files:
+                        if f.lower().endswith('.exe'):
+                            new_dir = root
+                            break
+                    if new_dir:
+                        break
+
+            if not new_dir:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return jsonify({'error': 'Aucun dossier d\'application trouvé dans le ZIP.'}), 500
+
+            # Chemin final après déplacement (même emplacement que l'actuel)
+            dest_dir = os.path.join(parent_dir, os.path.basename(current_dir))
+
             script_path = os.path.join(tmp_dir, '_update.bat')
             script = (
                 f'@echo off\r\n'
-                f'timeout /t 2 /nobreak >nul\r\n'
-                f'move /y "{new_exe}" "{current_exe}"\r\n'
+                f'timeout /t 4 /nobreak >nul\r\n'
+                # Supprimer l'ancien dossier complet
+                f'rmdir /s /q "{current_dir}"\r\n'
+                # Déplacer le nouveau dossier au même endroit
+                f'move /y "{new_dir}" "{dest_dir}"\r\n'
+                # Relancer l'application
                 f'start "" "{current_exe}"\r\n'
-                f'rmdir /s /q "{tmp_dir}"\r\n'
             )
             with open(script_path, 'w') as f:
                 f.write(script)
@@ -1048,7 +1070,7 @@ def auto_update():
                 return jsonify({'error': 'Aucun .app trouvé dans le ZIP.'}), 500
 
             # Remonter depuis sys.executable jusqu'au bundle .app
-            # ex: /Applications/BoutikManager.app/Contents/MacOS/BoutikManager
+            # ex: /Users/me/Desktop/BoutikManager.app/Contents/MacOS/BoutikManager
             app_bundle = sys.executable
             while app_bundle and not app_bundle.endswith('.app'):
                 parent = os.path.dirname(app_bundle)
@@ -1058,8 +1080,10 @@ def auto_update():
                 app_bundle = parent
 
             if not app_bundle:
-                # Fallback si pas dans un .app standard
-                app_bundle = os.path.dirname(sys._MEIPASS)
+                # Fallback : remonter de 3 niveaux depuis _MEIPASS
+                app_bundle = os.path.abspath(
+                    os.path.join(sys._MEIPASS, '..', '..', '..')
+                )
 
             install_dir = os.path.dirname(app_bundle)
             dest_app    = os.path.join(install_dir, os.path.basename(new_app))
@@ -1067,11 +1091,16 @@ def auto_update():
             script_path = os.path.join(tmp_dir, '_update.sh')
             script = (
                 f'#!/bin/bash\n'
-                f'sleep 2\n'
+                # Attendre plus longtemps (app + QWebEngine mettent du temps à fermer)
+                f'sleep 5\n'
+                # Supprimer l'ancien .app
                 f'rm -rf "{app_bundle}"\n'
+                # Déplacer le nouveau .app au même emplacement
                 f'mv "{new_app}" "{dest_app}"\n'
+                # Supprimer l'attribut quarantaine si présent
+                f'xattr -r -d com.apple.quarantine "{dest_app}" 2>/dev/null || true\n'
+                # Relancer l'application
                 f'open "{dest_app}"\n'
-                f'rm -- "$0"\n'
             )
             with open(script_path, 'w') as f:
                 f.write(script)
