@@ -29,7 +29,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '1.0'
+APP_VERSION = '1.1'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════

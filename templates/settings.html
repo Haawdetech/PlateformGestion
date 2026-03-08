@@ -65,8 +65,16 @@
             <div class="col-sm-6">
               <label class="form-label" for="currency">Devise</label>
               <select class="form-select" id="currency" name="currency">
-                {% for code in ['DH', 'DA', 'TND', 'EUR', 'USD', 'MAD'] %}
-                  <option value="{{ code }}" {% if s.currency == code %}selected{% endif %}>{{ code }}</option>
+                {% for code, label in [
+                  ('FCFA', 'FCFA — Franc CFA'),
+                  ('DH',  'DH — Dirham Marocain'),
+                  ('DA',  'DA — Dinar Algérien'),
+                  ('TND', 'TND — Dinar Tunisien'),
+                  ('EUR', 'EUR — Euro'),
+                  ('USD', 'USD — Dollar américain'),
+                  ('MAD', 'MAD — Dirham (MAD)')
+                ] %}
+                  <option value="{{ code }}" {% if s.currency == code %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
               </select>
             </div>
