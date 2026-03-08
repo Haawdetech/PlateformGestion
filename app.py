@@ -28,6 +28,9 @@ app = Flask(__name__,
             static_folder=os.path.join(BASE_DIR, 'static'))
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
+# Version actuelle de l'application (à incrémenter à chaque update)
+APP_VERSION = '1.0'
+
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
 
@@ -94,6 +97,7 @@ def init_db():
         ('shop_email',   'contact@monentreprise.ma'),
         ('shop_ice',     ''),
         ('currency',     'DH'),
+        ('github_repo',  ''),   # ex: monnom/BoutikManager
     ]
     for key, val in defaults:
         conn.execute('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', (key, val))
@@ -209,6 +213,8 @@ def inject_globals():
         'settings':     s,
         'currency':     s.get('currency', 'DH'),
         'current_user': get_current_user(),
+        'app_version':  APP_VERSION,
+        'github_repo':  s.get('github_repo', ''),
     }
 
 
@@ -717,7 +723,7 @@ def delete_invoice(iid):
 def settings():
     if request.method == 'POST':
         conn = get_db()
-        for field in ['shop_name', 'shop_address', 'shop_phone', 'shop_email', 'shop_ice', 'currency']:
+        for field in ['shop_name', 'shop_address', 'shop_phone', 'shop_email', 'shop_ice', 'currency', 'github_repo']:
             conn.execute(
                 'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
                 (field, request.form.get(field, '').strip())

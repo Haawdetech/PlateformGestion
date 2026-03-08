@@ -94,6 +94,37 @@
     </div>
   </nav>
 
+  <!-- ══════ BANNIÈRE MISE À JOUR ══════ -->
+  {% if github_repo %}
+  <div id="update-banner" style="display:none;"
+       class="alert alert-warning alert-dismissible mb-0 rounded-0 border-0 text-center" role="alert">
+    <i class="bi bi-arrow-up-circle-fill me-2"></i>
+    <strong>Nouvelle version disponible !</strong>
+    <a id="update-link" href="#" target="_blank" class="btn btn-sm btn-warning ms-2 fw-bold">
+      <i class="bi bi-download me-1"></i>Télécharger la mise à jour
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <script>
+    (function() {
+      const CURRENT = '{{ app_version }}';
+      const REPO    = '{{ github_repo }}';
+      if (!REPO) return;
+      fetch('https://api.github.com/repos/' + REPO + '/releases/latest')
+        .then(r => r.json())
+        .then(data => {
+          const latest = (data.tag_name || '').replace(/^v/, '');
+          if (latest && latest !== CURRENT) {
+            document.getElementById('update-link').href =
+              'https://github.com/' + REPO + '/releases/latest';
+            document.getElementById('update-banner').style.display = 'block';
+          }
+        })
+        .catch(() => {});  // silencieux si pas de connexion
+    })();
+  </script>
+  {% endif %}
+
   <!-- ══════ FLASH MESSAGES ══════ -->
   <main class="container my-4">
     {% with messages = get_flashed_messages(with_categories=true) %}

@@ -72,6 +72,21 @@
             </div>
           </div>
 
+          <!-- GitHub repo pour les mises à jour automatiques -->
+          <div class="mb-4">
+            <label class="form-label" for="github_repo">
+              <i class="bi bi-github me-1"></i>Dépôt GitHub
+              <span class="text-muted fw-normal">(pour les notifications de mise à jour)</span>
+            </label>
+            <input type="text" class="form-control" id="github_repo" name="github_repo"
+                   value="{{ s.github_repo or '' }}"
+                   placeholder="Ex : monnom/BoutikManager">
+            <div class="form-text">
+              Quand vous publiez une nouvelle version sur GitHub, vos clients verront
+              automatiquement une bannière de mise à jour.
+            </div>
+          </div>
+
           <!-- Bouton -->
           <div class="d-flex justify-content-end pt-2 border-top">
             <button type="submit" class="btn btn-primary px-5">
