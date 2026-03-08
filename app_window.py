@@ -82,16 +82,15 @@ class MainWindow(QMainWindow):
     # ── Configuration de la fenêtre ──────────
     def _setup_window(self):
         self.setWindowTitle("BoutikManager")
-        self.setMinimumSize(1100, 650)
-        self.resize(1380, 820)
-
-        # Icône (optionnelle — décommente si tu as un .ico)
-        # self.setWindowIcon(QIcon("assets/icon.ico"))
+        self.setMinimumSize(900, 600)
 
         # Fond sombre pendant le chargement
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#0f0f1a"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#111827"))
         self.setPalette(palette)
+
+        # Démarrer en plein écran (fenêtre maximisée)
+        self.showMaximized()
 
     # ── Création du WebEngineView ─────────────
     def _setup_webview(self):
