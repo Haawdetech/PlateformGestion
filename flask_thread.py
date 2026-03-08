@@ -40,7 +40,12 @@ class FlaskThread(QThread):
             log = logging.getLogger('werkzeug')
             log.setLevel(logging.ERROR)
 
-            from app import app as flask_app
+            from app import app as flask_app, init_db
+
+            # Initialiser la base de données (tables + admin par défaut)
+            # IMPORTANT : init_db() doit être appelé ici (pas seulement dans
+            # __main__) pour que ça fonctionne avec PyInstaller sur Windows/macOS
+            init_db()
 
             # Notifier l'interface que le serveur va démarrer
             # (petit délai pour laisser Qt afficher le splash)
