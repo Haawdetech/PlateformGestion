@@ -70,14 +70,22 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: 📥 Télécharger le code
+        uses: actions/checkout@v4
+
+      - name: 🔖 Lire la version depuis app.py
+        run: |
+          VERSION=$(python3 -c "import re; m=re.search(r\"APP_VERSION = '([^']+)'\", open('app.py').read()); print(m.group(1))")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: 📥 Télécharger les artifacts
         uses: actions/download-artifact@v4
 
       - name: 🏷️ Créer la Release GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: "BoutikManager v${{ github.run_number }}"
+          tag_name: v${{ env.VERSION }}
+          name: "BoutikManager v${{ env.VERSION }}"
           body: |
             ## 📦 Télécharger BoutikManager
 
