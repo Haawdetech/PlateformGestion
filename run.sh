@@ -1,9 +1,8 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────
-#  BoutikManager — Script de démarrage
+#  BoutikManager — Script de démarrage (PySide6)
 # ─────────────────────────────────────────────────
 
-# Se placer dans le répertoire du script
 cd "$(dirname "$0")"
 
 echo ""
@@ -26,15 +25,13 @@ fi
 # Activer le venv
 source venv/bin/activate
 
-# Installer les dépendances si nécessaire
-if ! python3 -c "import flask" &>/dev/null 2>&1; then
-    echo "📦  Installation de Flask..."
-    pip install -r requirements.txt --quiet
-fi
+# Installer / mettre à jour les dépendances
+echo "📦  Vérification des dépendances..."
+pip install -r requirements.txt --quiet
 
-echo "✅  Prêt ! Ouverture sur http://localhost:5000"
-echo "   (Appuyez sur Ctrl+C pour arrêter)"
+echo "✅  Lancement de BoutikManager..."
 echo "────────────────────────────────────────────"
 echo ""
 
-python3 app.py
+# Lancer l'interface PySide6 (Flask démarre en arrière-plan)
+python3 main.py

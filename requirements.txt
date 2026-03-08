@@ -1,2 +1,4 @@
 flask>=2.3.0
+werkzeug>=2.3.0
+PySide6>=6.6.0
 pyinstaller>=6.0
