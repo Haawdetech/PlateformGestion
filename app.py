@@ -114,6 +114,13 @@ def init_db():
     except Exception:
         pass
 
+    # Migration : ajouter purchase_price (prix d'achat) si colonne absente
+    try:
+        conn.execute("ALTER TABLE products ADD COLUMN purchase_price REAL DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass
+
     defaults = [
         ('shop_name',    'Mon Entreprise'),
         ('shop_address', '123 Rue Principale, Ville'),
@@ -560,24 +567,34 @@ def products():
 @login_required
 def add_product():
     if request.method == 'POST':
-        name      = request.form.get('name', '').strip()
-        desc      = request.form.get('description', '').strip()
-        price_raw = request.form.get('price', '').strip().replace(',', '.')
-        stock_raw = request.form.get('stock', '').strip()
+        name           = request.form.get('name', '').strip()
+        desc           = request.form.get('description', '').strip()
+        price_raw      = request.form.get('price', '').strip().replace(',', '.')
+        purchase_raw   = request.form.get('purchase_price', '').strip().replace(',', '.')
+        stock_raw      = request.form.get('stock', '').strip()
 
         errors = []
         if not name:
             errors.append('Le nom est obligatoire.')
         price_val = None
         if not price_raw:
-            errors.append('Le prix est obligatoire.')
+            errors.append('Le prix de vente est obligatoire.')
         else:
             try:
                 price_val = float(price_raw)
                 if price_val < 0:
-                    errors.append('Le prix doit être positif.')
+                    errors.append('Le prix de vente doit être positif.')
             except ValueError:
-                errors.append('Prix invalide.')
+                errors.append('Prix de vente invalide.')
+
+        purchase_val = None
+        if purchase_raw:
+            try:
+                purchase_val = float(purchase_raw)
+                if purchase_val < 0:
+                    errors.append('Le prix d\'achat doit être positif.')
+            except ValueError:
+                errors.append('Prix d\'achat invalide.')
 
         if errors:
             for e in errors:
@@ -586,8 +603,9 @@ def add_product():
 
         conn = get_db()
         conn.execute(
-            'INSERT INTO products (name, description, price, stock) VALUES (?, ?, ?, ?)',
-            (name, desc or None, price_val, int(stock_raw) if stock_raw.isdigit() else None)
+            'INSERT INTO products (name, description, price, purchase_price, stock) VALUES (?, ?, ?, ?, ?)',
+            (name, desc or None, price_val, purchase_val,
+             int(stock_raw) if stock_raw.isdigit() else None)
         )
         conn.commit()
         conn.close()
@@ -609,22 +627,30 @@ def edit_product(pid):
         return redirect(url_for('products'))
 
     if request.method == 'POST':
-        name      = request.form.get('name', '').strip()
-        desc      = request.form.get('description', '').strip()
-        price_raw = request.form.get('price', '').strip().replace(',', '.')
-        stock_raw = request.form.get('stock', '').strip()
+        name         = request.form.get('name', '').strip()
+        desc         = request.form.get('description', '').strip()
+        price_raw    = request.form.get('price', '').strip().replace(',', '.')
+        purchase_raw = request.form.get('purchase_price', '').strip().replace(',', '.')
+        stock_raw    = request.form.get('stock', '').strip()
 
         errors = []
         if not name:
             errors.append('Le nom est obligatoire.')
         price_val = None
         if not price_raw:
-            errors.append('Le prix est obligatoire.')
+            errors.append('Le prix de vente est obligatoire.')
         else:
             try:
                 price_val = float(price_raw)
             except ValueError:
-                errors.append('Prix invalide.')
+                errors.append('Prix de vente invalide.')
+
+        purchase_val = None
+        if purchase_raw:
+            try:
+                purchase_val = float(purchase_raw)
+            except ValueError:
+                errors.append('Prix d\'achat invalide.')
 
         if errors:
             for e in errors:
@@ -633,8 +659,9 @@ def edit_product(pid):
 
         conn = get_db()
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, stock=? WHERE id=?',
-            (name, desc or None, price_val, int(stock_raw) if stock_raw.isdigit() else None, pid)
+            'UPDATE products SET name=?, description=?, price=?, purchase_price=?, stock=? WHERE id=?',
+            (name, desc or None, price_val, purchase_val,
+             int(stock_raw) if stock_raw.isdigit() else None, pid)
         )
         conn.commit()
         conn.close()

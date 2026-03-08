@@ -57,24 +57,58 @@
           <th>#</th>
           <th>Nom du produit</th>
           <th>Description</th>
-          <th class="text-end">Prix</th>
+          <th class="text-end">Prix d'achat</th>
+          <th class="text-end">Prix de vente</th>
+          <th class="text-end">Marge</th>
           <th class="text-center">Stock</th>
           <th class="text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for p in products %}
+        {% set has_purchase = p.purchase_price is not none and p.purchase_price > 0 %}
+        {% set margin = (p.price - p.purchase_price) if has_purchase else none %}
+        {% set margin_pct = ((margin / p.purchase_price) * 100) if (has_purchase and p.purchase_price > 0) else none %}
         <tr>
           <td class="text-muted small">{{ p.id }}</td>
           <td>
             <span class="fw-semibold">{{ p.name }}</span>
           </td>
-          <td class="text-muted small">
-            {{ p.description or '—' }}
+          <td class="text-muted small">{{ p.description or '—' }}</td>
+
+          <!-- Prix d'achat -->
+          <td class="text-end text-muted">
+            {% if has_purchase %}
+              {{ p.purchase_price | fmt_price }} {{ currency }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
           </td>
+
+          <!-- Prix de vente -->
           <td class="text-end fw-bold text-primary">
             {{ p.price | fmt_price }} {{ currency }}
           </td>
+
+          <!-- Marge -->
+          <td class="text-end">
+            {% if margin is not none %}
+              {% set color = 'success' if margin >= 0 else 'danger' %}
+              <span class="fw-semibold text-{{ color }}">
+                {{ '+' if margin >= 0 else '' }}{{ margin | fmt_price }} {{ currency }}
+              </span>
+              {% if margin_pct is not none %}
+                <br>
+                <span class="badge bg-{{ color }} opacity-75" style="font-size:.65rem;">
+                  {{ '+' if margin_pct >= 0 else '' }}{{ '%.1f'|format(margin_pct) }}%
+                </span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+
+          <!-- Stock -->
           <td class="text-center">
             {% if p.stock is not none %}
               <span class="badge {% if p.stock > 10 %}bg-success{% elif p.stock > 0 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
@@ -84,6 +118,8 @@
               <span class="text-muted">—</span>
             {% endif %}
           </td>
+
+          <!-- Actions -->
           <td class="text-center">
             <a href="{{ url_for('edit_product', pid=p.id) }}"
                class="btn btn-sm btn-outline-primary me-1" title="Modifier">

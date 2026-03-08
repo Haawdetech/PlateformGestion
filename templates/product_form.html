@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ action }} un produit{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam me-1 text-primary"></i>{{ action }} un produit{% endblock %}
 
 {% block content %}
 
@@ -44,29 +45,60 @@
                       rows="3" placeholder="Description optionnelle du produit...">{{ product.description if product and product.description else '' }}</textarea>
           </div>
 
-          <!-- Prix & Stock -->
-          <div class="row g-3 mb-4">
+          <!-- Prix d'achat & Prix de vente -->
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="purchase_price">
+                <i class="bi bi-tag me-1 text-secondary"></i>Prix d'achat
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="purchase_price" name="purchase_price"
+                       step="0.01" min="0"
+                       value="{{ product.purchase_price if product and product.purchase_price is not none else '' }}"
+                       placeholder="0.00">
+                <span class="input-group-text fw-semibold">{{ currency }}</span>
+              </div>
+              <div class="form-text">Votre coût d'achat — jamais affiché sur les factures.</div>
+            </div>
             <div class="col-sm-6">
               <label class="form-label" for="price">
-                Prix par défaut <span class="text-danger">*</span>
+                <i class="bi bi-currency-dollar me-1 text-success"></i>Prix de vente
+                <span class="text-danger">*</span>
               </label>
               <div class="input-group">
                 <input type="number" class="form-control" id="price" name="price"
                        step="0.01" min="0"
                        value="{{ product.price if product else '' }}"
-                       placeholder="0.00" required>
+                       placeholder="0.00" required
+                       oninput="calcMargin()">
                 <span class="input-group-text fw-semibold">{{ currency }}</span>
               </div>
-              <div class="form-text">Ce prix sera pré-rempli lors de la création de factures.</div>
+              <div class="form-text">Ce prix s'affiche sur les factures.</div>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="stock">Quantité en stock</label>
-              <input type="number" class="form-control" id="stock" name="stock"
-                     min="0"
-                     value="{{ product.stock if product and product.stock is not none else '' }}"
-                     placeholder="Laisser vide si non suivi">
-              <div class="form-text">Optionnel — pour suivi de stock.</div>
+          </div>
+
+          <!-- Indicateur de marge (calculé automatiquement) -->
+          <div id="margin-info" class="mb-4" style="display:none;">
+            <div class="d-flex align-items-center gap-2 p-2 rounded"
+                 style="background:var(--bs-light,#f8f9fa); border:1px solid #dee2e6;">
+              <i class="bi bi-graph-up-arrow text-success"></i>
+              <span class="small fw-semibold text-muted">Marge :</span>
+              <span id="margin-amount" class="small fw-bold text-success"></span>
+              <span id="margin-pct" class="badge bg-success ms-1"></span>
             </div>
+          </div>
+
+          <!-- Stock -->
+          <div class="mb-4">
+            <label class="form-label" for="stock">
+              <i class="bi bi-boxes me-1 text-secondary"></i>Quantité en stock
+            </label>
+            <input type="number" class="form-control" id="stock" name="stock"
+                   min="0"
+                   value="{{ product.stock if product and product.stock is not none else '' }}"
+                   placeholder="Laisser vide si non suivi"
+                   style="max-width:200px;">
+            <div class="form-text">Optionnel — pour suivi de stock.</div>
           </div>
 
           <!-- Boutons -->
@@ -85,4 +117,36 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const PRODUCT_CURRENCY = '{{ currency }}';
+
+  function calcMargin() {
+    const buy   = parseFloat(document.getElementById('purchase_price').value) || 0;
+    const sell  = parseFloat(document.getElementById('price').value) || 0;
+    const info  = document.getElementById('margin-info');
+    const amtEl = document.getElementById('margin-amount');
+    const pctEl = document.getElementById('margin-pct');
+
+    if (buy > 0 && sell > 0) {
+      const margin = sell - buy;
+      const pct    = ((margin / buy) * 100).toFixed(1);
+      amtEl.textContent = (margin >= 0 ? '+' : '') +
+        margin.toFixed(2).replace('.', ',') + ' ' + PRODUCT_CURRENCY;
+      pctEl.textContent = (pct >= 0 ? '+' : '') + pct + '%';
+      const color = margin >= 0 ? 'success' : 'danger';
+      amtEl.className = 'small fw-bold text-' + color;
+      pctEl.className = 'badge bg-' + color + ' ms-1';
+      info.style.display = 'block';
+    } else {
+      info.style.display = 'none';
+    }
+  }
+
+  document.getElementById('purchase_price').addEventListener('input', calcMargin);
+  document.getElementById('price').addEventListener('input', calcMargin);
+  window.addEventListener('DOMContentLoaded', calcMargin);
+</script>
 {% endblock %}
