@@ -13,29 +13,27 @@
 
     html, body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 10px;
+      font-size: 11px;
       color: #000;
       background: #fff;
     }
 
-    /* ══ Wrapper : 2 exemplaires côte à côte en A4 paysage ══ */
+    /* ══ Wrapper : 2 exemplaires côte à côte ══ */
     .sheet {
       width: 297mm;
-      height: 210mm;
+      /* PAS de hauteur fixe : s'adapte au contenu */
       display: flex;
       flex-direction: row;
       align-items: stretch;
       background: #fff;
-      overflow: hidden;
     }
 
-    /* Chaque exemplaire prend la moitié de la page (A5 portrait ~148mm) */
+    /* Chaque exemplaire prend la moitié */
     .copy {
       flex: 0 0 50%;
       padding: 8mm 7mm 8mm 7mm;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     /* ── Trait de coupe au milieu ── */
@@ -71,7 +69,7 @@
     .header-right { flex: 0 0 44%; text-align: left; }
 
     .shop-name {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: bold;
       text-transform: uppercase;
       margin-bottom: 2px;
@@ -80,24 +78,20 @@
     .shop-tagline,
     .shop-address,
     .shop-phone {
-      font-size: 9px;
+      font-size: 10px;
       line-height: 1.5;
     }
 
-    .header-right .label {
-      font-size: 9px;
-      line-height: 1.5;
-    }
-
+    .header-right .label,
     .header-right .ref-num,
     .header-right .client-name-ref {
-      font-size: 9px;
+      font-size: 10px;
       line-height: 1.5;
     }
 
     /* ══ Nom client affiché grand ══ */
     .client-display {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: bold;
       text-decoration: underline;
       margin: 5px 0 3px 0;
@@ -112,12 +106,12 @@
     }
 
     .invoice-number-line .fact-label {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: bold;
     }
 
     .invoice-number-line .original-label {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: normal;
     }
 
@@ -125,24 +119,22 @@
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 0;
-      flex-grow: 0;   /* ne grandit pas pour remplir l'espace */
-      flex-shrink: 0; /* ne rétrécit pas non plus */
-      align-self: flex-start; /* hauteur = contenu uniquement */
+      margin-bottom: 6px;
     }
 
     .items-table th,
     .items-table td {
       border: 1px solid #000;
-      padding: 2px 4px;
-      font-size: 9px;
-      line-height: 1.4;
+      padding: 4px 6px;       /* plus de padding */
+      font-size: 11px;        /* texte produits plus grand */
+      line-height: 1.5;
     }
 
     .items-table thead th {
-      font-weight: normal;
+      font-weight: bold;
       text-align: left;
-      background: #fff;
+      background: #f0f0f0;
+      font-size: 11px;
     }
 
     .items-table thead th.col-qte  { width: 8%;  text-align: center; }
@@ -150,48 +142,49 @@
     .items-table thead th.col-pu   { width: 21%; text-align: right; }
     .items-table thead th.col-ttc  { width: 21%; text-align: right; }
 
-    .items-table tbody td.col-qte  { text-align: center; }
-    .items-table tbody td.col-desc { text-align: left; }
-    .items-table tbody td.col-pu   { text-align: right; }
-    .items-table tbody td.col-ttc  { text-align: right; }
+    .items-table tbody td.col-qte  { text-align: center; font-size: 12px; font-weight: bold; }
+    .items-table tbody td.col-desc { text-align: left; font-size: 12px; }
+    .items-table tbody td.col-pu   { text-align: right; font-size: 11px; }
+    .items-table tbody td.col-ttc  { text-align: right; font-size: 11px; font-weight: bold; }
 
-    /* Ligne vide séparatrice en bas du tableau articles */
-    .spacer-row td {
-      border: none;
-      border-left: 1px solid #000;
-      border-right: 1px solid #000;
-      height: 5px;
+    /* Description secondaire sous le nom produit */
+    .item-sub-desc {
+      font-size: 9px;
+      color: #555;
+      margin-top: 1px;
     }
 
     /* ══ FOOTER TABLE : totaux + signatures ══ */
     .footer-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: auto;    /* pousse le footer vers le bas de .copy */
-      flex-shrink: 0;
-      align-self: flex-end; /* colle au bas */
+      margin-top: 4px;
     }
 
     .footer-table td {
       border: 1px solid #000;
-      font-size: 9px;
-      padding: 2px 5px;
+      font-size: 11px;
+      padding: 4px 5px;
       text-align: center;
     }
 
     .footer-table .label-row td {
       font-weight: bold;
       text-transform: uppercase;
+      font-size: 10px;
+      background: #f0f0f0;
     }
 
     .footer-table .value-row td {
-      font-weight: normal;
+      font-size: 13px;
+      font-weight: bold;
     }
 
     .footer-table .sig-row td {
       font-weight: bold;
       text-transform: uppercase;
-      height: 18px;
+      height: 22px;
+      font-size: 10px;
     }
 
     .footer-table .col-total   { width: 33%; }
@@ -200,7 +193,7 @@
 
     /* ══ Badge exemplaire (coin haut-droit) ══ */
     .copy-badge {
-      font-size: 7px;
+      font-size: 8px;
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -250,12 +243,10 @@
       html, body {
         background: #fff !important;
         width: 297mm;
-        height: 210mm;
       }
       .sheet {
         width: 297mm !important;
-        height: 210mm !important;
-        page-break-after: avoid;
+        /* hauteur auto à l'impression aussi */
       }
       .print-controls { display: none !important; }
       @page {
@@ -273,7 +264,7 @@
        EXEMPLAIRE GAUCHE : CLIENT
   ════════════════════════════ -->
   <div class="copy">
-    <div class="copy-badge">Exemplaire client</div>
+
 
     <!-- Header -->
     <div class="header">
@@ -300,23 +291,20 @@
         {% if invoice.client_name or invoice.client_address %}
         <div class="client-name-ref">
           {{ invoice.client_name or '' }}
-          {% if invoice.client_address %} — {{ invoice.client_address }}{% endif %}
+          {% if invoice.client_address %}<br>{{ invoice.client_address }}{% endif %}
         </div>
         {% endif %}
       </div>
     </div>
 
-    {% if invoice.client_name %}
-    <div class="client-display">{{ invoice.client_name | upper }}</div>
-    {% endif %}
 
     <div class="invoice-number-line">
       <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
       <span class="original-label">Original</span>
     </div>
 
-    <!-- Articles (div wrapper évite l'étirement flex de la table) -->
-    <div><table class="items-table">
+    <!-- Articles -->
+    <table class="items-table">
       <thead>
         <tr>
           <th class="col-qte">QTE</th>
@@ -332,7 +320,7 @@
           <td class="col-desc">
             <div>{{ item.product_name }}</div>
             {% if item.description %}
-            <div style="font-size:8px; color:#555; margin-top:1px;">{{ item.description }}</div>
+            <div class="item-sub-desc">{{ item.description }}</div>
             {% endif %}
           </td>
           <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
@@ -340,7 +328,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table></div>
+    </table>
 
     <!-- Footer totaux -->
     <table class="footer-table">
@@ -370,7 +358,7 @@
        EXEMPLAIRE DROITE : BOUTIQUE
   ════════════════════════════ -->
   <div class="copy">
-    <div class="copy-badge">Exemplaire boutique</div>
+   
 
     <!-- Header -->
     <div class="header">
@@ -397,23 +385,21 @@
         {% if invoice.client_name or invoice.client_address %}
         <div class="client-name-ref">
           {{ invoice.client_name or '' }}
-          {% if invoice.client_address %} — {{ invoice.client_address }}{% endif %}
+          {% if invoice.client_address %} <br> {{ invoice.client_address }}{% endif %}
         </div>
         {% endif %}
       </div>
     </div>
 
-    {% if invoice.client_name %}
-    <div class="client-display">{{ invoice.client_name | upper }}</div>
-    {% endif %}
+   
 
     <div class="invoice-number-line">
       <span class="fact-label">Facture N&deg; <strong>{{ invoice.invoice_number }}</strong></span>
       <span class="original-label">Copie</span>
     </div>
 
-    <!-- Articles (div wrapper évite l'étirement flex de la table) -->
-    <div><table class="items-table">
+    <!-- Articles -->
+    <table class="items-table">
       <thead>
         <tr>
           <th class="col-qte">QTE</th>
@@ -429,7 +415,7 @@
           <td class="col-desc">
             <div>{{ item.product_name }}</div>
             {% if item.description %}
-            <div style="font-size:8px; color:#555; margin-top:1px;">{{ item.description }}</div>
+            <div class="item-sub-desc">{{ item.description }}</div>
             {% endif %}
           </td>
           <td class="col-pu">{{ item.unit_price | fmt_price }}</td>
@@ -437,7 +423,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table></div>
+    </table>
 
     <!-- Footer totaux -->
     <table class="footer-table">
