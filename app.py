@@ -964,7 +964,7 @@ def auto_update():
             f'https://api.github.com/repos/{repo}/releases/latest',
             headers={'User-Agent': 'BoutikManager'}
         )
-        with urllib.request.urlopen(req, timeout=15) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:
             release = json.loads(r.read())
 
         # ── Mode développement : git pull + redémarrage ───────────────────
@@ -1019,7 +1019,12 @@ def auto_update():
         # ── 2. Télécharger dans un dossier temporaire ────────────────────
         tmp_dir  = tempfile.mkdtemp(prefix='boutik_update_')
         zip_path = os.path.join(tmp_dir, asset_name)
-        urllib.request.urlretrieve(download_url, zip_path)
+        req_dl = urllib.request.Request(
+            download_url, headers={'User-Agent': 'BoutikManager'}
+        )
+        with urllib.request.urlopen(req_dl, timeout=300) as resp:
+            with open(zip_path, 'wb') as f:
+                shutil.copyfileobj(resp, f)
 
         # ── 3. Extraire le ZIP ───────────────────────────────────────────
         with zipfile.ZipFile(zip_path, 'r') as z:
