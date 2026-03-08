@@ -94,18 +94,20 @@
     </div>
   </nav>
 
-  <!-- ══════ BANNIÈRE MISE À JOUR ══════ -->
+  <!-- ══════ BANNIÈRE MISE À JOUR AUTOMATIQUE ══════ -->
   {% if github_repo %}
   <div id="update-banner" style="display:none;"
-       class="alert alert-warning alert-dismissible mb-0 rounded-0 border-0 text-center" role="alert">
+       class="alert alert-warning alert-dismissible mb-0 rounded-0 border-0 text-center py-2" role="alert">
     <i class="bi bi-arrow-up-circle-fill me-2"></i>
     <strong>Nouvelle version disponible !</strong>
-    <a id="update-link" href="#" target="_blank" class="btn btn-sm btn-warning ms-2 fw-bold">
-      <i class="bi bi-download me-1"></i>Télécharger la mise à jour
-    </a>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button id="update-btn" onclick="doAutoUpdate()"
+            class="btn btn-sm btn-success ms-3 fw-bold">
+      <i class="bi bi-download me-1"></i>Installer maintenant
+    </button>
+    <button type="button" class="btn-close ms-2" data-bs-dismiss="alert"></button>
   </div>
   <script>
+    // ── Vérifier si une mise à jour est disponible ──
     (function() {
       const CURRENT = '{{ app_version }}';
       const REPO    = '{{ github_repo }}';
@@ -115,13 +117,46 @@
         .then(data => {
           const latest = (data.tag_name || '').replace(/^v/, '');
           if (latest && latest !== CURRENT) {
-            document.getElementById('update-link').href =
-              'https://github.com/' + REPO + '/releases/latest';
             document.getElementById('update-banner').style.display = 'block';
           }
         })
-        .catch(() => {});  // silencieux si pas de connexion
+        .catch(() => {});
     })();
+
+    // ── Lancer la mise à jour automatique ──
+    function doAutoUpdate() {
+      const btn = document.getElementById('update-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Téléchargement...';
+
+      fetch('/api/auto-update')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            btn.className = 'btn btn-sm btn-primary ms-3 fw-bold';
+            btn.innerHTML = '✅ Installé ! Redémarrage en cours...';
+            setTimeout(() => {
+              btn.innerHTML = '🔄 Reconnexion...';
+              // Réessayer de se connecter jusqu\'au redémarrage
+              let tries = 0;
+              const retry = setInterval(() => {
+                tries++;
+                fetch('/').then(() => { clearInterval(retry); location.reload(); })
+                          .catch(() => { if (tries > 20) clearInterval(retry); });
+              }, 1500);
+            }, 2000);
+          } else {
+            btn.disabled = false;
+            btn.className = 'btn btn-sm btn-danger ms-3 fw-bold';
+            btn.innerHTML = '❌ Erreur — Réessayer';
+            alert('Erreur : ' + (data.error || 'Inconnue'));
+          }
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.innerHTML = '❌ Erreur réseau';
+        });
+    }
   </script>
   {% endif %}
 

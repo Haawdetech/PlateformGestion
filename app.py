@@ -6,6 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import sys
 import socket
+import json
+import platform
+import threading
+import time
+import urllib.request
+import subprocess
 
 # Fix: résolution DNS lente sur macOS / Python 3.14
 socket.getfqdn = lambda name='': 'localhost'
@@ -29,7 +35,7 @@ app = Flask(__name__,
 app.secret_key = 'boutikmanager-secret-2024-xk9p'
 
 # Version actuelle de l'application (à incrémenter à chaque update)
-APP_VERSION = '1.1'
+APP_VERSION = '1.2'
 
 
 # ══════════════════════════ DB HELPERS ══════════════════════════════
@@ -735,6 +741,82 @@ def settings():
 
     s = get_settings()
     return render_template('settings.html', s=s)
+
+
+# ══════════════════════════ AUTO-UPDATE ═════════════════════════════
+
+@app.route('/api/auto-update')
+@login_required
+def auto_update():
+    """Télécharge et installe automatiquement la nouvelle version."""
+    if not getattr(sys, 'frozen', False):
+        return jsonify({'error': 'Auto-update disponible uniquement sur l\'exécutable compilé.'}), 400
+
+    s        = get_settings()
+    repo     = s.get('github_repo', '').strip()
+    if not repo:
+        return jsonify({'error': 'Dépôt GitHub non configuré dans les paramètres.'}), 400
+
+    try:
+        # 1 — Récupérer l'URL de téléchargement depuis GitHub API
+        req = urllib.request.Request(
+            f'https://api.github.com/repos/{repo}/releases/latest',
+            headers={'User-Agent': 'BoutikManager'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            release = json.loads(r.read())
+
+        is_windows   = platform.system() == 'Windows'
+        asset_name   = 'BoutikManager.exe' if is_windows else 'BoutikManager'
+        download_url = None
+        for asset in release.get('assets', []):
+            if asset['name'] == asset_name:
+                download_url = asset['browser_download_url']
+                break
+
+        if not download_url:
+            return jsonify({'error': f'Fichier {asset_name} introuvable dans la release.'}), 404
+
+        # 2 — Télécharger la nouvelle version
+        current_exe = sys.executable
+        new_exe     = current_exe + '.new'
+        urllib.request.urlretrieve(download_url, new_exe)
+
+        # 3 — Créer le script de remplacement + redémarrage
+        if is_windows:
+            script_path = current_exe + '_update.bat'
+            script = (
+                f'@echo off\r\n'
+                f'timeout /t 2 /nobreak >nul\r\n'
+                f'move /y "{new_exe}" "{current_exe}"\r\n'
+                f'start "" "{current_exe}"\r\n'
+                f'del "%~f0"\r\n'
+            )
+            with open(script_path, 'w') as f:
+                f.write(script)
+            subprocess.Popen(['cmd', '/c', script_path],
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            script_path = current_exe + '_update.sh'
+            script = (
+                f'#!/bin/bash\n'
+                f'sleep 2\n'
+                f'mv "{new_exe}" "{current_exe}"\n'
+                f'chmod +x "{current_exe}"\n'
+                f'"{current_exe}" &\n'
+                f'rm -- "$0"\n'
+            )
+            with open(script_path, 'w') as f:
+                f.write(script)
+            os.chmod(script_path, 0o755)
+            subprocess.Popen(['/bin/bash', script_path])
+
+        # 4 — Arrêter le serveur actuel après 1,5 s
+        threading.Timer(1.5, lambda: os._exit(0)).start()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ══════════════════════════ MAIN ════════════════════════════════════
